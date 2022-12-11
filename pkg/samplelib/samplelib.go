@@ -1,30 +1,30 @@
 package samplelib
 
 type Sample struct {
-	name string
-	path string
+	Name string
+	Path string
 	null bool
 }
 
-func NewSample(name string, path string) Sample {
-	return Sample{name: name, path: path}
+func NewSample(name string, path string) *Sample {
+	return &Sample{Name: name, Path: path}
 }
 
 type Node struct {
-	name     string
-	path     string
-	parent   *Node
-	children []*Node
-	samples  []*Sample
-	null     bool
+	Name   string
+	Path   string
+	Parent *Node
+	null   bool
 }
 
 func NullNode() *Node {
-	rv := &Node{name: "", path: "", children: []*Node{}, samples: []*Sample{}, null: true}
-	rv.parent = rv
+	rv := &Node{Name: "", Path: "", null: true}
+	rv.Parent = rv
 	return rv
 }
 
-func NewNode(name string, path string, parent *Node, children []*Node, samples []*Sample) *Node {
-	return &Node{name: name, path: path, parent: parent, children: children, samples: samples, null: false}
+type DataSource interface {
+	RootNode() (*Node, error)
+	ChildrenOf(node *Node) ([]*Node, error)
+	SamplesOf(node *Node) ([]*Sample, error)
 }
