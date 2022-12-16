@@ -34,6 +34,10 @@ type Node struct {
 	null   bool
 }
 
+func (n *Node) IsNull() bool {
+	return n.null
+}
+
 func NullNode() *Node {
 	rv := &Node{Name: "", Path: "", null: true}
 	rv.Parent = rv
