@@ -20,6 +20,7 @@ package controller
 import (
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
+	"log"
 )
 
 //go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
@@ -28,15 +29,22 @@ type Controller interface {
 }
 
 type controller struct {
-	ds samplelib.DataSource
-	ui tui.UserInterface
+	ds     samplelib.DataSource
+	ui     tui.UserInterface
+	eh     tui.ErrorHandler
+	logger *log.Logger
 }
 
 func (c *controller) UpdateNode(node samplelib.Node) {
-	//TODO implement me
-	panic("implement me")
+	children, err := c.ds.ChildrenOf(node)
+	if err != nil {
+		c.eh.Print(err)
+	}
+	for _, child := range children {
+		c.logger.Printf("Child! %T", child)
+	}
 }
 
 func New(ds samplelib.DataSource, ui tui.UserInterface) Controller {
-	return &controller{ds: ds, ui: ui}
+	return &controller{ds: ds, ui: ui, logger: log.New(ui.LogView(), "", 0)}
 }

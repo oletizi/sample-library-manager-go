@@ -1,5 +1,6 @@
 .PHONY: all test cover
 COVER_FILE=./.coverage.txt
+MOCKS=./mocks
 BIN=bin/
 
 all: get build test
@@ -9,17 +10,17 @@ default: all
 get:
 	go get ./...
 
-generate: get
+gen: get
 	go generate ./...
-build: generate
+build: gen
 	go build -o $(BIN) ./...
 
-test: generate
+test: gen
 	go test ./... -v -coverprofile $(COVER_FILE) && go tool cover -func $(COVER_FILE)
 
 clean:
 	$(GOCLEAN)
-	rm -f $(BIN) || true &&	rm $(COVER_FILE) || true
+	rm -ff $(BIN) || true && rm $(COVER_FILE) || true && rm -rf $(MOCKS)
 
 install:
 	go install ./...

@@ -15,32 +15,11 @@
  *
  */
 
-package view
+package tui
 
-import (
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"io"
-)
-
-type View interface{}
-
-type TextView interface {
-	io.Writer
-	io.Closer
-	Clear()
-}
-
-//go:generate mockgen -destination=../../../mocks/tui/view/nodview.go . NodeView
-type NodeView interface {
-	UpdateNode(node samplelib.Node, onChange func(), onSelected func())
-}
-
-//go:generate mockgen -destination=../../../mocks/tui/view/infoview.go . InfoView
-type InfoView interface {
-	TextView
-}
-
-//go:generate mockgen -destination=../../../mocks/tui/view/logview.go . LogView
-type LogView interface {
-	TextView
+//go:generate mockgen -destination=../../mocks/tui/error.go . ErrorHandler
+type ErrorHandler interface {
+	Print(err error)
+	Fatal(err error)
+	Panic(err error)
 }
