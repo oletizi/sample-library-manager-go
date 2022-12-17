@@ -43,6 +43,7 @@ func TestNewSample(t *testing.T) {
 	path := "the path"
 	sample := NewSample(name, path)
 	assert.NotNil(t, sample)
+	assert.False(t, sample.Null())
 	assert.Equal(t, sample.Name(), name)
 	assert.Equal(t, sample.Path(), path)
 }
