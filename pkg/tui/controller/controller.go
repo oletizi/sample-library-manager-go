@@ -38,22 +38,27 @@ type controller struct {
 	logger *log.Logger
 }
 
+// UpdateNode tells the controller to update the UI for a new node
 func (c *controller) UpdateNode(node samplelib.Node) {
 	c.nv.UpdateNode(node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
 }
 
+// nodeSelected callback function for when a node is selected in the node view
 func (c *controller) nodeSelected(node samplelib.Node) {
 	c.iv.UpdateNode(node)
 }
 
+// sampleSelected callback function for when a sample is selected in the node view
 func (c *controller) sampleSelected(sample samplelib.Sample) {
 	c.iv.UpdateSample(sample)
 }
 
+// nodeChosen callback function for when a node is chosen in the node view
 func (c *controller) nodeChosen(node samplelib.Node) {
 	c.UpdateNode(node)
 }
 
+// sampleChosen callback function for when a sample is chosen in the node view
 func (c *controller) sampleChosen(sample samplelib.Sample) {
 	// for now, choosing a sample is the same as selecting a sample
 	c.sampleSelected(sample)
