@@ -15,16 +15,19 @@
  *
  */
 
-package main
+package controller
 
 import (
-	"fmt"
-	"github.com/oletizi/samplemgr/pkg/tui"
+	"github.com/golang/mock/gomock"
+	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
+	"testing"
 )
 
-func main() {
-	err := tui.NewTviewInterface().Run()
-	if err != nil {
-		fmt.Print(err)
-	}
+func TestController_UpdateNode(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	node := mock_samplelib.NewMockNode(ctrl)
+	node.EXPECT().Null().MinTimes(1)
+
+	node.Null()
 }

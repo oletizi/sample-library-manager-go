@@ -17,35 +17,81 @@
 
 package samplelib
 
-type Sample struct {
-	Name string
-	Path string
+type Nullable interface {
+	Null() bool
+}
+
+type Entity interface {
+	Nullable
+	Name() string
+	Path() string
+}
+
+//go:generate mockgen -destination=../../mocks/samplelib/sample.go . Sample
+type Sample interface {
+	Entity
+}
+
+type sample struct {
+	name string
+	path string
 	null bool
 }
 
-func NewSample(name string, path string) *Sample {
-	return &Sample{Name: name, Path: path}
+func (s *sample) Null() bool {
+	return s.null
 }
 
-type Node struct {
-	Name   string
-	Path   string
-	Parent *Node
+func (s *sample) Name() string {
+	return s.name
+}
+
+func (s *sample) Path() string {
+	return s.path
+}
+
+func NewSample(name string, path string) Sample {
+	return &sample{name: name, path: path}
+}
+
+//go:generate mockgen -destination=../../mocks/samplelib/node.go . Node
+type Node interface {
+	Entity
+	Parent() Node
+}
+
+type node struct {
+	name   string
+	path   string
+	parent Node
 	null   bool
 }
 
-func (n *Node) IsNull() bool {
+func (n *node) Name() string {
+	return n.name
+}
+
+func (n *node) Path() string {
+	return n.path
+}
+
+func (n *node) Parent() Node {
+	return n.parent
+}
+
+func (n *node) Null() bool {
 	return n.null
 }
 
-func NullNode() *Node {
-	rv := &Node{Name: "", Path: "", null: true}
-	rv.Parent = rv
+func NullNode() Node {
+	rv := &node{name: "", path: "", null: true}
+	rv.parent = rv
 	return rv
 }
 
+//go:generate mockgen -destination=../../mocks/samplelib/datasource.go . DataSource
 type DataSource interface {
-	RootNode() (*Node, error)
-	ChildrenOf(node *Node) ([]*Node, error)
-	SamplesOf(node *Node) ([]*Sample, error)
+	RootNode() (Node, error)
+	ChildrenOf(node Node) ([]Node, error)
+	SamplesOf(node Node) ([]Sample, error)
 }

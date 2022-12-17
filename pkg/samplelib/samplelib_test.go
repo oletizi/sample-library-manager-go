@@ -24,7 +24,18 @@ import (
 
 func TestNullNode(t *testing.T) {
 	null := NullNode()
-	assert.True(t, null.null)
+	assert.True(t, null.Null())
+}
+
+func TestNode(t *testing.T) {
+	node := &node{
+		parent: NullNode(),
+		name:   "name",
+	}
+	assert.False(t, node.Null())
+	assert.NotNil(t, node.Parent())
+	assert.Equal(t, node.name, node.Name())
+	assert.Equal(t, node.path, node.Path())
 }
 
 func TestNewSample(t *testing.T) {
@@ -32,6 +43,6 @@ func TestNewSample(t *testing.T) {
 	path := "the path"
 	sample := NewSample(name, path)
 	assert.NotNil(t, sample)
-	assert.Equal(t, sample.Name, name)
-	assert.Equal(t, sample.Path, path)
+	assert.Equal(t, sample.Name(), name)
+	assert.Equal(t, sample.Path(), path)
 }

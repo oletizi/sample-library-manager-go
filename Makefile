@@ -9,10 +9,12 @@ default: all
 get:
 	go get ./...
 
-build:
+generate: get
+	go generate ./...
+build: generate
 	go build -o $(BIN) ./...
 
-test:
+test: generate
 	go test ./... -v -coverprofile $(COVER_FILE) && go tool cover -func $(COVER_FILE)
 
 clean:

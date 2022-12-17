@@ -15,11 +15,29 @@
  *
  */
 
-package main
+package view
 
-import "testing"
+import (
+	"github.com/oletizi/samplemgr/pkg/samplelib"
+	"io"
+)
 
-func TestBasics(t *testing.T) {
-	// XXX: This seems dumb.
-	main()
+type View interface{}
+
+type TextView interface {
+	io.Writer
+	io.Closer
+	Clear()
+}
+
+type NodeView interface {
+	UpdateNode(node samplelib.Node, onChange func(), onSelected func())
+}
+
+type InfoView interface {
+	TextView
+}
+
+type LogView interface {
+	TextView
 }

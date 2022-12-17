@@ -27,49 +27,49 @@ type fsDataSource struct {
 	root string
 }
 
-func (f fsDataSource) RootNode() (*Node, error) {
+func (f *fsDataSource) RootNode() (Node, error) {
 	_, err := os.ReadDir(f.root)
 	if err != nil {
 		return nil, err
 	}
 
-	rv := &Node{Name: path.Base(f.root), Path: f.root, Parent: NullNode()}
+	rv := &node{name: path.Base(f.root), path: f.root, parent: NullNode()}
 	return rv, nil
 }
 
-func (f fsDataSource) ChildrenOf(node *Node) ([]*Node, error) {
-	dir, err := os.ReadDir(node.Path)
+func (f *fsDataSource) ChildrenOf(parent Node) ([]Node, error) {
+	dir, err := os.ReadDir(parent.Path())
 	if err != nil {
 		return nil, err
 	}
-	children := make([]*Node, 0)
+	children := make([]Node, 0)
 	for _, item := range dir {
 		if item.IsDir() {
-			// make a new node
-
-			child := &Node{}
-			child.Name = item.Name()
-			child.Path = path.Join(node.Path, item.Name())
-			child.Parent = node
+			// make a new Node
+			child := &node{
+				name:   item.Name(),
+				path:   path.Join(parent.Path(), item.Name()),
+				parent: parent,
+			}
 			children = append(children, child)
 		}
 	}
 	return children, nil
 }
 
-func (f fsDataSource) SamplesOf(node *Node) ([]*Sample, error) {
-	dir, err := os.ReadDir(node.Path)
+func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
+	dir, err := os.ReadDir(node.Path())
 	if err != nil {
 		return nil, err
 	}
-	samples := make([]*Sample, 0)
+	samples := make([]Sample, 0)
 	for _, item := range dir {
 		if !item.IsDir() {
 			// XXX: this set of supported file types should:
 			// o be more robust (actually check the file)
 			// o be defined publicly somewhere
 			if slices.Contains([]string{".wav", ".aif", ".aiff", ".mp3", ".m4a", ".flac"}, path.Ext(item.Name())) {
-				sample := NewSample(item.Name(), path.Join(node.Path, item.Name()))
+				sample := NewSample(item.Name(), path.Join(node.Path(), item.Name()))
 				samples = append(samples, sample)
 			}
 		}
@@ -78,5 +78,5 @@ func (f fsDataSource) SamplesOf(node *Node) ([]*Sample, error) {
 }
 
 func NewFilesystemDataSource(root string) DataSource {
-	return fsDataSource{root: root}
+	return &fsDataSource{root: root}
 }

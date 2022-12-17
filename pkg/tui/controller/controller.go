@@ -15,16 +15,28 @@
  *
  */
 
-package main
+package controller
 
 import (
-	"fmt"
+	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 )
 
-func main() {
-	err := tui.NewTviewInterface().Run()
-	if err != nil {
-		fmt.Print(err)
-	}
+//go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
+type Controller interface {
+	UpdateNode(node samplelib.Node)
+}
+
+type controller struct {
+	ds samplelib.DataSource
+	ui tui.UserInterface
+}
+
+func (c *controller) UpdateNode(node samplelib.Node) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func New(ds samplelib.DataSource, ui tui.UserInterface) Controller {
+	return &controller{ds: ds, ui: ui}
 }
