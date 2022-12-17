@@ -17,6 +17,8 @@
 
 package tui
 
+import "log"
+
 //go:generate mockgen -destination=../../mocks/tui/logger.go . Logger
 type Logger interface {
 	Print(v ...any)
@@ -25,7 +27,52 @@ type Logger interface {
 	Panic(v ...any)
 	Panicln(v ...any)
 	Panicf(format string, v ...any)
-	Error(v ...any)
-	Errorln(v ...any)
-	Errorf(v ...any)
+	Fatal(v ...any)
+	Fatalln(v ...any)
+	Fatalf(format string, v ...any)
+}
+
+// XXX: There's got to be a better way to do this than a brute force pass-through
+type logger struct {
+	l *log.Logger
+}
+
+func (l *logger) Print(v ...any) {
+	l.l.Print(v...)
+}
+
+func (l *logger) Println(v ...any) {
+	l.l.Println(v...)
+}
+
+func (l *logger) Printf(format string, v ...any) {
+	l.l.Printf(format, v...)
+}
+
+func (l *logger) Panic(v ...any) {
+	l.l.Panic(v...)
+}
+
+func (l *logger) Panicln(v ...any) {
+	l.l.Panicln(v...)
+}
+
+func (l *logger) Panicf(format string, v ...any) {
+	l.l.Panicf(format, v...)
+}
+
+func (l *logger) Fatal(v ...any) {
+	l.l.Fatal(v...)
+}
+
+func (l *logger) Fatalln(v ...any) {
+	l.l.Fatalln(v...)
+}
+
+func (l *logger) Fatalf(format string, v ...any) {
+	l.l.Fatalf(format, v...)
+}
+
+func NewLogger(l *log.Logger) Logger {
+	return &logger{l}
 }

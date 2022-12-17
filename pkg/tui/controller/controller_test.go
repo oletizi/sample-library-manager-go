@@ -30,11 +30,12 @@ import (
 func TestNew(t *testing.T) {
 	ctl := gomock.NewController(t)
 	ds := mock_samplelib.NewMockDataSource(ctl)
+	errorHandler := mock_tui.NewMockErrorHandler(ctl)
 	nodeView := mock_view.NewMockNodeView(ctl)
 	infoView := mock_view.NewMockInfoView(ctl)
 	logView := mock_view.NewMockLogView(ctl)
 
-	c := New(ds, nodeView, infoView, logView)
+	c := New(ds, errorHandler, nodeView, infoView, logView)
 	assert.NotNil(t, c)
 }
 
@@ -58,7 +59,7 @@ func TestController_UpdateNode(t *testing.T) {
 		logger: log.Default(),
 	}
 	// XXX: can't figure out how to get function arguments to match
-	nodeView.EXPECT().UpdateNode(node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 	assert.NotNil(t, c)
 	c.UpdateNode(node)
@@ -87,17 +88,19 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	ds := mock_samplelib.NewMockDataSource(ctl)
 	nodeView := mock_view.NewMockNodeView(ctl)
 	infoView := mock_view.NewMockInfoView(ctl)
 	node := mock_samplelib.NewMockNode(ctl)
 	sample := mock_samplelib.NewMockSample(ctl)
 
 	c := &controller{
+		ds: ds,
 		nv: nodeView,
 		iv: infoView,
 	}
 
-	nodeView.EXPECT().UpdateNode(node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 	c.nodeChosen(node)
 
 	infoView.EXPECT().UpdateSample(sample)

@@ -27,7 +27,9 @@ type errorHandler struct {
 }
 
 func (e *errorHandler) Handle(err error) {
-	e.logger.Print(err)
+	if err != nil {
+		e.logger.Print(err)
+	}
 }
 
 func NewErrorHandler(logger Logger) ErrorHandler {

@@ -15,35 +15,24 @@
  *
  */
 
-package main
+package tviewtui
 
-import (
-	"flag"
-	"fmt"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
-	"log"
-	"os"
-)
+import "github.com/rivo/tview"
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	fmt.Printf("args length: %d", len(args))
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
-	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	err := tviewtui.New(ds).Run()
-	if err != nil {
-		fmt.Print(err)
-	}
+type tLogView struct {
+	textView *tview.TextView
+}
+
+func (t *tLogView) Close() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *tLogView) Clear() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *tLogView) Write(p []byte) (n int, err error) {
+	return t.textView.Write(p)
 }

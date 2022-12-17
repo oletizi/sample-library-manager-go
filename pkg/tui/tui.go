@@ -17,46 +17,7 @@
 
 package tui
 
-import (
-	"github.com/rivo/tview"
-	"log"
-)
-
 //go:generate mockgen -destination=../../mocks/tui/application.go . Application
 type Application interface {
 	Run() error
-}
-
-type tviewApp struct {
-	app    *tview.Application
-	logger *log.Logger
-}
-
-func (t *tviewApp) Run() error {
-	return t.app.Run()
-}
-
-func NewTviewApplication() Application {
-	app := tview.NewApplication()
-
-	nodeView := tview.NewList()
-	nodeView.SetBorder(true).SetTitle(" Node ")
-
-	infoView := tview.NewTextView()
-	infoView.SetBorder(true).SetTitle(" Info ")
-
-	logView := tview.NewTextView()
-	logView.SetBorder(true).SetTitle(" Log ")
-
-	flex := tview.NewFlex().
-		SetDirection(tview.FlexColumn).
-		AddItem(nodeView, 0, 1, true).
-		AddItem(infoView, 0, 1, false).
-		AddItem(logView, 0, 1, false)
-
-	app.SetRoot(flex, true)
-	return &tviewApp{
-		app:    app,
-		logger: log.New(logView, "", 0),
-	}
 }

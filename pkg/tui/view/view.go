@@ -32,11 +32,14 @@ type TextView interface {
 
 //go:generate mockgen -destination=../../../mocks/tui/view/nodview.go . NodeView
 type NodeView interface {
-	UpdateNode(node samplelib.Node,
+	UpdateNode(
+		ds samplelib.DataSource,
+		node samplelib.Node,
 		nodeSelected func(node samplelib.Node),
 		sampleSelected func(sample samplelib.Sample),
 		nodeChosen func(node samplelib.Node),
-		sampleChosen func(sample samplelib.Sample))
+		sampleChosen func(sample samplelib.Sample),
+	)
 }
 
 //go:generate mockgen -destination=../../../mocks/tui/view/infoview.go . InfoView
@@ -49,4 +52,5 @@ type InfoView interface {
 //go:generate mockgen -destination=../../../mocks/tui/view/logview.go . LogView
 type LogView interface {
 	TextView
+	io.Writer
 }

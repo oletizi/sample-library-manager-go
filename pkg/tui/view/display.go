@@ -22,7 +22,6 @@ import (
 	_ "embed"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
-	"log"
 	"text/template"
 )
 
@@ -44,7 +43,7 @@ type Display interface {
 }
 
 type display struct {
-	logger                *log.Logger
+	logger                tui.Logger
 	errorHandler          tui.ErrorHandler
 	nodeTextTemplate      *template.Template
 	nodeListingTemplate   *template.Template
@@ -97,7 +96,7 @@ func (d *display) DisplayNodeAsListing(node samplelib.Node, isParent bool) strin
 	return render(d.nodeListingTemplate, data, d.errorHandler)
 }
 
-func NewDisplay(logger *log.Logger, errorHandler tui.ErrorHandler) (Display, error) {
+func NewDisplay(logger tui.Logger, errorHandler tui.ErrorHandler) (Display, error) {
 	nodeTextTemplate, err := template.New("nodeTextTemplate").Parse(nodeTextTemplateString)
 	errorHandler.Handle(err)
 

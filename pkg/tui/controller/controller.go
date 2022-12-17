@@ -31,16 +31,17 @@ type Controller interface {
 
 type controller struct {
 	ds     samplelib.DataSource
+	eh     tui.ErrorHandler
 	nv     view.NodeView
 	iv     view.InfoView
 	lv     view.LogView
-	eh     tui.ErrorHandler
 	logger *log.Logger
 }
 
 // UpdateNode tells the controller to update the UI for a new node
 func (c *controller) UpdateNode(node samplelib.Node) {
-	c.nv.UpdateNode(node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
+	c.logger.Print("Calling UpdateNode on node: " + node.Name())
+	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
 }
 
 // nodeSelected callback function for when a node is selected in the node view
@@ -55,6 +56,7 @@ func (c *controller) sampleSelected(sample samplelib.Sample) {
 
 // nodeChosen callback function for when a node is chosen in the node view
 func (c *controller) nodeChosen(node samplelib.Node) {
+	c.logger.Print("In controller nodeChosen: " + node.Name())
 	c.UpdateNode(node)
 }
 
@@ -64,8 +66,10 @@ func (c *controller) sampleChosen(sample samplelib.Sample) {
 	c.sampleSelected(sample)
 }
 
-func New(ds samplelib.DataSource, nodeView view.NodeView, infoView view.InfoView, logView view.LogView) Controller {
-	return &controller{ds: ds,
+func New(ds samplelib.DataSource, eh tui.ErrorHandler, nodeView view.NodeView, infoView view.InfoView, logView view.LogView) Controller {
+	return &controller{
+		ds:     ds,
+		eh:     eh,
 		nv:     nodeView,
 		iv:     infoView,
 		lv:     logView,
