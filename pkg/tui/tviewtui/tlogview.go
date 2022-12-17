@@ -23,16 +23,6 @@ type tLogView struct {
 	textView *tview.TextView
 }
 
-func (t *tLogView) Close() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (t *tLogView) Clear() {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (t *tLogView) Write(p []byte) (n int, err error) {
 	return t.textView.Write(p)
 }

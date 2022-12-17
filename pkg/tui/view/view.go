@@ -25,9 +25,7 @@ import (
 type View interface{}
 
 type TextView interface {
-	io.Writer
-	io.Closer
-	Clear()
+	Update(v string)
 }
 
 //go:generate mockgen -destination=../../../mocks/tui/view/nodview.go . NodeView
@@ -51,6 +49,5 @@ type InfoView interface {
 
 //go:generate mockgen -destination=../../../mocks/tui/view/logview.go . LogView
 type LogView interface {
-	TextView
 	io.Writer
 }

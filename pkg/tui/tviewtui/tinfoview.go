@@ -31,27 +31,17 @@ type tInfoView struct {
 	display  view.Display
 }
 
-func (t *tInfoView) Write(p []byte) (n int, err error) {
+func (t tInfoView) Update(v string) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *tInfoView) Close() error {
+func (t tInfoView) UpdateNode(node samplelib.Node) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *tInfoView) Clear() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (t *tInfoView) UpdateNode(node samplelib.Node) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (t *tInfoView) UpdateSample(sample samplelib.Sample) {
+func (t tInfoView) UpdateSample(sample samplelib.Sample) {
 	//TODO implement me
 	panic("implement me")
 }
