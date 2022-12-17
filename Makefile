@@ -20,7 +20,7 @@ test: gen
 
 clean:
 	$(GOCLEAN)
-	rm -ff $(BIN) || true && rm $(COVER_FILE) || true && rm -rf $(MOCKS)
+	rm -rf $(BIN) || true && rm $(COVER_FILE) || true && rm -rf $(MOCKS)
 
 install:
 	go install ./...

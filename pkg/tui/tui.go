@@ -18,7 +18,6 @@
 package tui
 
 import (
-	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"github.com/rivo/tview"
 	"log"
 )
@@ -28,22 +27,12 @@ type Application interface {
 	Run() error
 }
 
-//go:generate mockgen -destination=../../mocks/tui/userinterface.go . UserInterface
-type UserInterface interface {
-	NodeView() view.NodeView
-	InfoView() view.InfoView
-	LogView() view.LogView
+type tviewApp struct {
+	app    *tview.Application
+	logger *log.Logger
 }
 
-type tviewUi struct {
-	app      *tview.Application
-	nodeView *tview.List
-	infoView *tview.TextView
-	logView  *tview.TextView
-	logger   *log.Logger
-}
-
-func (t *tviewUi) Run() error {
+func (t *tviewApp) Run() error {
 	return t.app.Run()
 }
 
@@ -66,11 +55,8 @@ func NewTviewInterface() Application {
 		AddItem(logView, 0, 1, false)
 
 	app.SetRoot(flex, true)
-	return &tviewUi{
-		app:      app,
-		nodeView: nodeView,
-		infoView: infoView,
-		logView:  logView,
-		logger:   log.New(logView, "", 0),
+	return &tviewApp{
+		app:    app,
+		logger: log.New(logView, "", 0),
 	}
 }

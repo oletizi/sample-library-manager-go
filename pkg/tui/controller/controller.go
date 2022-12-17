@@ -20,6 +20,7 @@ package controller
 import (
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
+	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"log"
 )
 
@@ -30,21 +31,38 @@ type Controller interface {
 
 type controller struct {
 	ds     samplelib.DataSource
-	ui     tui.UserInterface
+	nv     view.NodeView
+	iv     view.InfoView
+	lv     view.LogView
 	eh     tui.ErrorHandler
 	logger *log.Logger
 }
 
 func (c *controller) UpdateNode(node samplelib.Node) {
-	children, err := c.ds.ChildrenOf(node)
-	if err != nil {
-		c.eh.Print(err)
-	}
-	for _, child := range children {
-		c.logger.Printf("Child! %T", child)
-	}
+	c.nv.UpdateNode(node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
 }
 
-func New(ds samplelib.DataSource, ui tui.UserInterface) Controller {
-	return &controller{ds: ds, ui: ui, logger: log.New(ui.LogView(), "", 0)}
+func (c *controller) nodeSelected(node samplelib.Node) {
+	c.iv.UpdateNode(node)
+}
+
+func (c *controller) sampleSelected(sample samplelib.Sample) {
+	c.iv.UpdateSample(sample)
+}
+
+func (c *controller) nodeChosen(node samplelib.Node) {
+	c.UpdateNode(node)
+}
+
+func (c *controller) sampleChosen(sample samplelib.Sample) {
+	// for now, choosing a sample is the same as selecting a sample
+	c.sampleSelected(sample)
+}
+
+func New(ds samplelib.DataSource, nodeView view.NodeView, infoView view.InfoView, logView view.LogView) Controller {
+	return &controller{ds: ds,
+		nv:     nodeView,
+		iv:     infoView,
+		lv:     logView,
+		logger: log.New(logView, "", 0)}
 }

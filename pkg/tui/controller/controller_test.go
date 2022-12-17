@@ -18,13 +18,10 @@
 package controller
 
 import (
-	"bytes"
-	"errors"
 	"github.com/golang/mock/gomock"
 	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
 	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
 	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -33,11 +30,11 @@ import (
 func TestNew(t *testing.T) {
 	ctl := gomock.NewController(t)
 	ds := mock_samplelib.NewMockDataSource(ctl)
-	ui := mock_tui.NewMockUserInterface(ctl)
+	nodeView := mock_view.NewMockNodeView(ctl)
+	infoView := mock_view.NewMockInfoView(ctl)
 	logView := mock_view.NewMockLogView(ctl)
 
-	ui.EXPECT().LogView().Times(1).Return(logView)
-	c := New(ds, ui)
+	c := New(ds, nodeView, infoView, logView)
 	assert.NotNil(t, c)
 }
 
@@ -45,33 +42,64 @@ func TestController_UpdateNode(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 	ds := mock_samplelib.NewMockDataSource(ctl)
-	ui := mock_tui.NewMockUserInterface(ctl)
 	eh := mock_tui.NewMockErrorHandler(ctl)
+	nodeView := mock_view.NewMockNodeView(ctl)
+	infoView := mock_view.NewMockInfoView(ctl)
+	logView := mock_view.NewMockLogView(ctl)
 	node := mock_samplelib.NewMockNode(ctl)
-	child := mock_samplelib.NewMockNode(ctl)
-
-	children := make([]samplelib.Node, 0)
-	children = append(children, child)
-	ds.EXPECT().ChildrenOf(node).Times(1).Return(children, nil)
 
 	// make a new controller
 	c := &controller{
 		ds:     ds,
-		ui:     ui,
+		nv:     nodeView,
+		iv:     infoView,
+		lv:     logView,
 		eh:     eh,
 		logger: log.Default(),
 	}
+	// XXX: can't figure out how to get function arguments to match
+	nodeView.EXPECT().UpdateNode(node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+
 	assert.NotNil(t, c)
 	c.UpdateNode(node)
+}
 
-	// test error condition
-	errString := "explosions"
-	var buf bytes.Buffer
-	c.logger = log.New(&buf, "", 0)
-	// return an error from ChildrenOf()
-	ds.EXPECT().ChildrenOf(node).Times(1).Return(nil, errors.New(errString))
-	// expect controller to send error to handler
-	eh.EXPECT().Print(gomock.Any()).Times(1)
+func TestController_selectNodeAndSample(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
 
-	c.UpdateNode(node)
+	infoView := mock_view.NewMockInfoView(ctl)
+	node := mock_samplelib.NewMockNode(ctl)
+	sample := mock_samplelib.NewMockSample(ctl)
+
+	c := &controller{
+		iv: infoView,
+	}
+
+	infoView.EXPECT().UpdateNode(node)
+	c.nodeSelected(node)
+
+	infoView.EXPECT().UpdateSample(sample)
+	c.sampleSelected(sample)
+}
+
+func TestController_chooseNodeAndSample(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	nodeView := mock_view.NewMockNodeView(ctl)
+	infoView := mock_view.NewMockInfoView(ctl)
+	node := mock_samplelib.NewMockNode(ctl)
+	sample := mock_samplelib.NewMockSample(ctl)
+
+	c := &controller{
+		nv: nodeView,
+		iv: infoView,
+	}
+
+	nodeView.EXPECT().UpdateNode(node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+	c.nodeChosen(node)
+
+	infoView.EXPECT().UpdateSample(sample)
+	c.sampleChosen(sample)
 }
