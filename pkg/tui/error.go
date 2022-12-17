@@ -19,7 +19,5 @@ package tui
 
 //go:generate mockgen -destination=../../mocks/tui/error.go . ErrorHandler
 type ErrorHandler interface {
-	Print(err error)
-	Fatal(err error)
-	Panic(err error)
+	Handle(error)
 }
