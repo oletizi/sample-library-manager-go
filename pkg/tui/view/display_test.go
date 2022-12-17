@@ -20,7 +20,7 @@ package view
 import (
 	"github.com/golang/mock/gomock"
 	mocksamplelib "github.com/oletizi/samplemgr/mocks/samplelib"
-	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
+	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"strings"
@@ -32,7 +32,7 @@ func TestRender(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	errorHandler := mock_tui.NewMockErrorHandler(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
 	tmpl, err := template.New("test").Parse("{{ .YourNotGoingToFindIt }}")
 	assert.Nil(t, err)
 
@@ -40,11 +40,36 @@ func TestRender(t *testing.T) {
 	render(tmpl, struct{}{}, errorHandler)
 }
 
+func TestSampleDisplay(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	samplePath := "the sample path"
+	sampleName := "the sample name"
+	sample := mocksamplelib.NewMockSample(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
+
+	sample.EXPECT().Path().Return(samplePath)
+	sample.EXPECT().Name().Return(sampleName)
+	errorHandler.EXPECT().Handle(gomock.Any()).MinTimes(1)
+
+	display, err := NewDisplay(log.Default(), errorHandler)
+	assert.Nil(t, err)
+	assert.NotNil(t, display)
+	text := display.DisplaySampleAsText(sample)
+	assert.True(t, strings.Contains(text, samplePath))
+	assert.True(t, strings.Contains(text, sampleName))
+
+	sample.EXPECT().Name().Return(sampleName)
+	text = display.DisplaySampleAsListing(sample)
+	assert.True(t, strings.Contains(text, sampleName))
+}
+
 func TestNodeDisplay(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	errorHandler := mock_tui.NewMockErrorHandler(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
 
 	nodePath := "the node path"
 	nodeName := "the node name"

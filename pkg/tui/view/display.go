@@ -29,20 +29,43 @@ import (
 //go:embed templates/nodeText.tmpl
 var nodeTextTemplateString string
 
-//go:embed templates/list.tmpl
-var listTemplateString string
+//go:embed templates/sampleText.tmpl
+var sampleTextTemplateString string
+
+//go:embed templates/listing.tmpl
+var listingTemplateString string
 
 //go:generate mockgen -destination=../../../mocks/tui/view/displayer.go . Display
 type Display interface {
 	DisplayNodeAsText(node samplelib.Node) string
 	DisplayNodeAsListing(node samplelib.Node, isParent bool) string
+	DisplaySampleAsListing(sample samplelib.Sample) string
+	DisplaySampleAsText(sample samplelib.Sample) string
 }
 
 type display struct {
-	logger           *log.Logger
-	errorHandler     tui.ErrorHandler
-	nodeTextTemplate *template.Template
-	nodeListTemplate *template.Template
+	logger                *log.Logger
+	errorHandler          tui.ErrorHandler
+	nodeTextTemplate      *template.Template
+	nodeListingTemplate   *template.Template
+	sampleTextTemplate    *template.Template
+	sampleListingTemplate *template.Template
+}
+
+func (d *display) DisplaySampleAsListing(sample samplelib.Sample) string {
+	data := struct{ Name string }{sample.Name()}
+	return render(d.sampleListingTemplate, data, d.errorHandler)
+}
+
+func (d *display) DisplaySampleAsText(sample samplelib.Sample) string {
+	data := struct {
+		Name string
+		Path string
+	}{
+		sample.Name(),
+		sample.Path(),
+	}
+	return render(d.sampleTextTemplate, data, d.errorHandler)
 }
 
 func render(template *template.Template, data any, handler tui.ErrorHandler) string {
@@ -71,13 +94,27 @@ func (d *display) DisplayNodeAsListing(node samplelib.Node, isParent bool) strin
 		return ".."
 	}
 	data := struct{ Name string }{node.Name()}
-	return render(d.nodeListTemplate, data, d.errorHandler)
+	return render(d.nodeListingTemplate, data, d.errorHandler)
 }
 
 func NewDisplay(logger *log.Logger, errorHandler tui.ErrorHandler) (Display, error) {
 	nodeTextTemplate, err := template.New("nodeTextTemplate").Parse(nodeTextTemplateString)
 	errorHandler.Handle(err)
-	nodeListTemplate, err := template.New("listTemplate").Parse(listTemplateString)
+
+	sampleTextTemplate, err := template.New("sampleTextTemplate").Parse(sampleTextTemplateString)
 	errorHandler.Handle(err)
-	return &display{logger: logger, nodeTextTemplate: nodeTextTemplate, nodeListTemplate: nodeListTemplate, errorHandler: errorHandler}, nil
+
+	nodeListingTemplate, err := template.New("listTemplate").Parse(listingTemplateString)
+	errorHandler.Handle(err)
+
+	// For now, these are the same
+	sampleListingTemplate := nodeListingTemplate
+
+	return &display{
+		logger:                logger,
+		nodeTextTemplate:      nodeTextTemplate,
+		nodeListingTemplate:   nodeListingTemplate,
+		sampleTextTemplate:    sampleTextTemplate,
+		sampleListingTemplate: sampleListingTemplate,
+		errorHandler:          errorHandler}, nil
 }
