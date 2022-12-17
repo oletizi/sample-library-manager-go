@@ -36,7 +36,7 @@ func (t *tviewApp) Run() error {
 	return t.app.Run()
 }
 
-func NewTviewInterface() Application {
+func NewTviewApplication() Application {
 	app := tview.NewApplication()
 
 	nodeView := tview.NewList()

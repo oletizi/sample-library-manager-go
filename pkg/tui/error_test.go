@@ -15,16 +15,27 @@
  *
  */
 
-package main
+package tui
 
 import (
-	"fmt"
-	"github.com/oletizi/samplemgr/pkg/tui"
+	"errors"
+	"github.com/golang/mock/gomock"
+	mocktui "github.com/oletizi/samplemgr/mocks/tui"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func main() {
-	err := tui.NewTviewApplication().Run()
-	if err != nil {
-		fmt.Print(err)
-	}
+func TestErrorHandler(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	logger := mocktui.NewMockLogger(ctl)
+
+	handler := NewErrorHandler(logger)
+	assert.NotNil(t, handler)
+
+	err := errors.New("my error")
+
+	logger.EXPECT().Print(err)
+	handler.Handle(err)
 }

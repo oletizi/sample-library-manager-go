@@ -21,3 +21,15 @@ package tui
 type ErrorHandler interface {
 	Handle(error)
 }
+
+type errorHandler struct {
+	logger Logger
+}
+
+func (e *errorHandler) Handle(err error) {
+	e.logger.Print(err)
+}
+
+func NewErrorHandler(logger Logger) ErrorHandler {
+	return &errorHandler{logger}
+}

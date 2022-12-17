@@ -15,16 +15,17 @@
  *
  */
 
-package main
+package tui
 
-import (
-	"fmt"
-	"github.com/oletizi/samplemgr/pkg/tui"
-)
-
-func main() {
-	err := tui.NewTviewApplication().Run()
-	if err != nil {
-		fmt.Print(err)
-	}
+//go:generate mockgen -destination=../../mocks/tui/logger.go . Logger
+type Logger interface {
+	Print(v ...any)
+	Println(v ...any)
+	Printf(format string, v ...any)
+	Panic(v ...any)
+	Panicln(v ...any)
+	Panicf(format string, v ...any)
+	Error(v ...any)
+	Errorln(v ...any)
+	Errorf(v ...any)
 }
