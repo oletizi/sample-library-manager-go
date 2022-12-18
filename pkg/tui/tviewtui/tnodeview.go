@@ -97,7 +97,7 @@ func (t *tNodeView) UpdateNode(
 		t.list.AddItem(text, "", 0, func() {
 			// notest
 			t.logger.Print("Sample chosen: " + thisSample.Name())
-			sampleSelected(thisSample)
+			sampleChosen(thisSample)
 		})
 	}
 
