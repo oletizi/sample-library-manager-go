@@ -80,11 +80,23 @@ func TestFsDataSource_MetaOf(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(samples))
 
+	// test a sample with metadata
 	sample := samples[0]
 
 	meta, err := source.MetaOf(sample)
 	assert.Nil(t, err)
 	assert.NotNil(t, meta)
-	//keywords := meta.Keywords()
-	//assert.Equal(t, 2, len(keywords))
+	keywords := meta.Keywords()
+	assert.Equal(t, 2, len(keywords))
+	assert.Equal(t, "percussion", keywords[0])
+	assert.Equal(t, "shaker", keywords[1])
+
+	description := meta.Description()
+	assert.Equal(t, "The description for cabasa.wav", description)
+
+	// test a sample without metadata
+	sample = samples[1]
+	meta, err = source.MetaOf(sample)
+	assert.Equal(t, "", meta.Description())
+	assert.Equal(t, 0, len(meta.Keywords()))
 }

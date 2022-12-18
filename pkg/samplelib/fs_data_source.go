@@ -30,36 +30,13 @@ type fsDataSource struct {
 	root string
 }
 
-func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
-	metaPath := path.Join(path.Dir(sample.Path()), ".meta", sample.Name()+".json")
-	log.Println("meta path: " + metaPath)
-	meta := &sampleMeta{}
-	err := loadMeta(metaPath, meta)
-
-	if err != nil {
-		return nil, err
-	} else {
-		return meta, err
-	}
-}
-
-func newNode(name string, path string, parent Node) *node {
-	return &node{
-		entity: entity{name: name, path: path, nullable: nullable{isNull: false}}, parent: parent}
-}
-
 func (f *fsDataSource) RootNode() (Node, error) {
 	_, err := os.ReadDir(f.root)
 	if err != nil {
 		return nil, err
 	}
-
-	//rv := &node{
-	//	entity: entity{name: path.Base(f.root), path: f.root, nullable: nullable{isNull: false}},
-	//	parent: NullNode(),
-	//}
-	return newNode(path.Base(f.root), f.root, NullNode()),
-		nil
+	node := newNode(path.Base(f.root), f.root, NullNode())
+	return &node, nil
 }
 
 func (f *fsDataSource) ChildrenOf(parent Node) ([]Node, error) {
@@ -71,7 +48,7 @@ func (f *fsDataSource) ChildrenOf(parent Node) ([]Node, error) {
 	for _, item := range dir {
 		if item.IsDir() && !strings.HasPrefix(item.Name(), ".") {
 			child := newNode(item.Name(), path.Join(parent.Path(), item.Name()), parent)
-			children = append(children, child)
+			children = append(children, &child)
 		}
 	}
 	return children, nil
@@ -86,8 +63,8 @@ func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
 	for _, item := range dir {
 		if !item.IsDir() {
 			// XXX: this set of supported file types should:
-			// o be more robust (actually check the file)
-			// o be defined publicly somewhere
+			// - be more robust (actually check the file)
+			// - be defined publicly somewhere
 			if slices.Contains([]string{".wav", ".aif", ".aiff", ".mp3", ".m4a", ".flac"}, path.Ext(item.Name())) {
 				sample := newSample(item.Name(), path.Join(node.Path(), item.Name()))
 				samples = append(samples, sample)
@@ -96,21 +73,34 @@ func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
 	}
 	return samples, nil
 }
+func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
+	metaPath := path.Join(path.Dir(sample.Path()), ".meta", sample.Name()+".json")
 
-func loadMeta(path string, data any) error {
-	file, err := os.Open(path)
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Panic(err)
-		}
-	}(file)
+	meta := newSampleMeta(sample, "", []string{})
+	if _, err := os.Stat(metaPath); err == nil {
+		// XXX: This sooooo verbose. There must be a better way to do this.
+		// Need to declare this temporary struct b/c the json.Unmarshal function can only write to
+		// public fields; the meta struct only has private fields.
+		data := struct {
+			Description string
+			Keywords    []string
+		}{Description: "", Keywords: []string{}}
 
-	if err != nil {
-		return err
+		loadMeta(metaPath, &data)
+		meta.description = data.Description
+		meta.keywords = data.Keywords
 	}
-	decoder := json.NewDecoder(file)
-	return decoder.Decode(data)
+
+	return &meta, nil
+}
+
+func loadMeta(path string, data any) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		// notest
+		log.Panic(err)
+	}
+	err = json.Unmarshal(b, data)
 }
 
 func NewFilesystemDataSource(root string) DataSource {

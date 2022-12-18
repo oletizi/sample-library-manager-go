@@ -41,6 +41,14 @@ type entity struct {
 	path string
 }
 
+func newEntity(name string, path string) entity {
+	return entity{
+		name:     name,
+		path:     path,
+		nullable: nullable{false},
+	}
+}
+
 func (e *entity) Name() string {
 	return e.name
 }
@@ -59,11 +67,7 @@ type sample struct {
 
 func newSample(name string, path string) Sample {
 	s := sample{
-		entity: entity{
-			nullable: nullable{isNull: false},
-			name:     name,
-			path:     path,
-		},
+		entity: newEntity(name, path),
 	}
 	return &s
 }
@@ -77,6 +81,10 @@ type Node interface {
 type node struct {
 	entity
 	parent Node
+}
+
+func newNode(name string, path string, parent Node) node {
+	return node{entity: newEntity(name, path), parent: parent}
 }
 
 func (n *node) Parent() Node {
@@ -97,9 +105,9 @@ type Meta interface {
 }
 
 type meta struct {
+	entity
 	description string
 	keywords    []string
-	isNull      bool
 }
 
 func (m *meta) Description() string {
@@ -120,20 +128,15 @@ type sampleMeta struct {
 	sample Sample
 }
 
-func (s *sampleMeta) Null() bool {
-	return s.isNull
-}
-
-func (s *sampleMeta) Name() string {
-	return s.sample.Name()
-}
-
-func (s *sampleMeta) Path() string {
-	return s.sample.Path()
-}
-
-func (s *sampleMeta) Keywords() []string {
-	return s.keywords
+func newSampleMeta(sample Sample, description string, keywords []string) sampleMeta {
+	return sampleMeta{
+		meta: meta{
+			description: description,
+			keywords:    keywords,
+			entity:      entity{name: sample.Name(), path: sample.Path(), nullable: nullable{isNull: false}},
+		},
+		sample: sample,
+	}
 }
 
 //go:generate mockgen -destination=../../mocks/samplelib/datasource.go . DataSource
