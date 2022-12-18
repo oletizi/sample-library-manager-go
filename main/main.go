@@ -19,7 +19,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
 	"log"
@@ -41,8 +40,12 @@ func main() {
 		}
 	}
 	ds := samplelib.NewFilesystemDataSource(rootDir)
-	err := tviewtui.New(ds).Run()
+	tui, err := tviewtui.New(ds)
 	if err != nil {
-		fmt.Print(err)
+		log.Default().Fatal(err)
+	}
+	err = tui.Run()
+	if err != nil {
+		log.Default().Fatal(err)
 	}
 }

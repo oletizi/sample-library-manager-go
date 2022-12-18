@@ -1,13 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/rivo/tview"
-	"log"
-)
-
+/*
 func mainExperiment() {
 
 	ds := samplelib.NewFilesystemDataSource("test/data/library/multi-level")
@@ -113,10 +106,10 @@ func (m *appModel) UpdateNodeView() *appModel {
 	return m
 }
 
-// OnNodeViewChange is the callback function for when anything in the node view (tview List) changes.
+// OnNodeViewChange is the callback function for when anything in the node view (tview list) changes.
 // It figures out what to put in the info panel.
 func (m *appModel) OnNodeViewChange(index int, _ string, _ string, _ rune) {
-	m.logger.Println("List changed!")
+	m.logger.Println("list changed!")
 	if m.updating {
 		m.logger.Println("The list is updating, so we'll ignore this change.")
 		return
@@ -191,3 +184,4 @@ func (l *logger) Println(msg any) Logger {
 	}
 	return l
 }
+*/

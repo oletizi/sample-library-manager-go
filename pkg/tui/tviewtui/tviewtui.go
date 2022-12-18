@@ -31,11 +31,12 @@ type tApp struct {
 	logger *log.Logger
 }
 
+// notest
 func (t *tApp) Run() error {
 	return t.app.Run()
 }
 
-func New(ds samplelib.DataSource) tui.Application {
+func New(ds samplelib.DataSource) (tui.Application, error) {
 
 	app := tview.NewApplication()
 	logView := &tLogView{textView: tview.NewTextView()}
@@ -47,7 +48,7 @@ func New(ds samplelib.DataSource) tui.Application {
 
 	display, err := view.NewDisplay(logger, errorHandler)
 	if err != nil {
-		log.Default().Fatal(err)
+		return nil, err
 	}
 
 	nodeView := newTNodeView(tview.NewList(), display, logger, errorHandler)
@@ -70,7 +71,7 @@ func New(ds samplelib.DataSource) tui.Application {
 	return &tApp{
 		app:    app,
 		logger: log.New(logView, "", 0),
-	}
+	}, nil
 }
 
 func newTInfoView(

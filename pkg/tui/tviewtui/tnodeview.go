@@ -31,7 +31,7 @@ type tNodeView struct {
 	logger  tui.Logger
 }
 
-// Constructor for tNodeView. Discourages forgetting to set properties. Wires up listeners.
+// newTNodeView Constructor for tNodeView. Discourages forgetting to set properties. Wires up listeners.
 // Also sets some display defaults
 func newTNodeView(
 	list *tview.List,
@@ -67,6 +67,7 @@ func (t *tNodeView) UpdateNode(
 		parent := node.Parent()
 		nodes = append(nodes, parent)
 		t.list.AddItem(text, "", 0, func() {
+			// notest
 			t.logger.Print("Parent node chosen: " + parent.Name())
 			nodeChosen(parent)
 		})
@@ -81,6 +82,7 @@ func (t *tNodeView) UpdateNode(
 		text := t.display.DisplayNodeAsListing(child, false)
 		thisChild := child
 		t.list.AddItem(text, "", 0, func() {
+			// notest
 			t.logger.Print("Child node chosen: " + thisChild.Name())
 			nodeChosen(thisChild)
 		})
@@ -93,6 +95,7 @@ func (t *tNodeView) UpdateNode(
 		text := t.display.DisplaySampleAsListing(sample)
 		thisSample := sample
 		t.list.AddItem(text, "", 0, func() {
+			// notest
 			t.logger.Print("Sample chosen: " + thisSample.Name())
 			sampleSelected(thisSample)
 		})
@@ -100,6 +103,7 @@ func (t *tNodeView) UpdateNode(
 
 	// set the callback function for when a new list element is selected (e.g., w/ arrow keys)
 	t.list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+		// notest
 		t.logger.Printf("Node view changed: index: %d", index)
 		if index < len(nodes) {
 			nodeSelected(nodes[index])
