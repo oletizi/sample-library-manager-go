@@ -50,22 +50,8 @@ func New(ds samplelib.DataSource) tui.Application {
 		log.Default().Fatal(err)
 	}
 
-	nodeView := &tNodeView{
-		list:    tview.NewList(),
-		display: display,
-		logger:  logger,
-		eh:      errorHandler,
-	}
-	nodeView.list.SetBorder(true)
-	nodeView.list.ShowSecondaryText(false)
-
-	infoView := &tInfoView{
-		textView: tview.NewTextView(),
-		display:  display,
-		logger:   logger,
-		eh:       errorHandler,
-	}
-	infoView.textView.SetBorder(true)
+	nodeView := newTNodeView(tview.NewList(), display, logger, errorHandler)
+	infoView := newTInfoView(tview.NewTextView(), display, logger, errorHandler)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
@@ -84,5 +70,21 @@ func New(ds samplelib.DataSource) tui.Application {
 	return &tApp{
 		app:    app,
 		logger: log.New(logView, "", 0),
+	}
+}
+
+func newTInfoView(
+	textView *tview.TextView,
+	display view.Display,
+	logger tui.Logger,
+	handler tui.ErrorHandler,
+) *tInfoView {
+	textView.SetBorder(true)
+	textView.SetTitle(" Info ")
+	return &tInfoView{
+		textView: textView,
+		display:  display,
+		logger:   logger,
+		eh:       handler,
 	}
 }

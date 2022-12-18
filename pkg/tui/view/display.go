@@ -31,8 +31,11 @@ var nodeTextTemplateString string
 //go:embed templates/sampleText.tmpl
 var sampleTextTemplateString string
 
-//go:embed templates/listing.tmpl
-var listingTemplateString string
+//go:embed templates/nodeListing.tmpl
+var nodeListingTemplateString string
+
+//go:embed templates/sampleListing.tmpl
+var sampleListingTemplateString string
 
 //go:generate mockgen -destination=../../../mocks/tui/view/displayer.go . Display
 type Display interface {
@@ -103,11 +106,12 @@ func NewDisplay(logger tui.Logger, errorHandler tui.ErrorHandler) (Display, erro
 	sampleTextTemplate, err := template.New("sampleTextTemplate").Parse(sampleTextTemplateString)
 	errorHandler.Handle(err)
 
-	nodeListingTemplate, err := template.New("listTemplate").Parse(listingTemplateString)
+	nodeListingTemplate, err := template.New("nodeListingTemplate").Parse(nodeListingTemplateString)
 	errorHandler.Handle(err)
 
 	// For now, these are the same
-	sampleListingTemplate := nodeListingTemplate
+	sampleListingTemplate, err := template.New("sampleListingTemplate").Parse(sampleListingTemplateString)
+	errorHandler.Handle(err)
 
 	return &display{
 		logger:                logger,

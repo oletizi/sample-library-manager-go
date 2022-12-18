@@ -31,6 +31,24 @@ type tNodeView struct {
 	logger  tui.Logger
 }
 
+// Constructor for tNodeView. Discourages forgetting to set properties. Wires up listeners.
+// Also sets some display defaults
+func newTNodeView(
+	list *tview.List,
+	display view.Display,
+	logger tui.Logger,
+	handler tui.ErrorHandler,
+) *tNodeView {
+	list.ShowSecondaryText(false)
+	list.SetBorder(true)
+	return &tNodeView{
+		list:    list,
+		display: display,
+		logger:  logger,
+		eh:      handler,
+	}
+}
+
 func (t *tNodeView) UpdateNode(
 	ds samplelib.DataSource,
 	node samplelib.Node,
@@ -41,10 +59,13 @@ func (t *tNodeView) UpdateNode(
 ) {
 	t.list.SetTitle(" " + node.Name() + " ")
 	t.list.Clear()
+
+	var nodes []samplelib.Node
 	// if the node has a parent, add an item for it.
 	if !node.Parent().Null() {
 		text := ".."
 		parent := node.Parent()
+		nodes = append(nodes, parent)
 		t.list.AddItem(text, "", 0, func() {
 			t.logger.Print("Parent node chosen: " + parent.Name())
 			nodeChosen(parent)
@@ -55,6 +76,7 @@ func (t *tNodeView) UpdateNode(
 	children, err := ds.ChildrenOf(node)
 	t.eh.Handle(err)
 
+	nodes = append(nodes, children...)
 	for _, child := range children {
 		text := t.display.DisplayNodeAsListing(child, false)
 		thisChild := child
@@ -63,5 +85,8 @@ func (t *tNodeView) UpdateNode(
 			nodeChosen(thisChild)
 		})
 	}
-
+	t.list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+		t.logger.Printf("Node view changed: index: %d", index)
+		nodeSelected(nodes[index])
+	})
 }

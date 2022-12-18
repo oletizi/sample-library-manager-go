@@ -35,7 +35,7 @@ type controller struct {
 	nv     view.NodeView
 	iv     view.InfoView
 	lv     view.LogView
-	logger *log.Logger
+	logger tui.Logger
 }
 
 // UpdateNode tells the controller to update the UI for a new node

@@ -22,6 +22,7 @@ import (
 	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
 	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
 	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
+	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -60,7 +61,8 @@ func TestController_UpdateNode(t *testing.T) {
 	}
 	// XXX: can't figure out how to get function arguments to match
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
-
+	infoView.EXPECT().UpdateNode(node)
+	node.EXPECT().Name()
 	assert.NotNil(t, c)
 	c.UpdateNode(node)
 }
@@ -95,12 +97,15 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	sample := mock_samplelib.NewMockSample(ctl)
 
 	c := &controller{
-		ds: ds,
-		nv: nodeView,
-		iv: infoView,
+		ds:     ds,
+		nv:     nodeView,
+		iv:     infoView,
+		logger: tui.NewLogger(log.Default()),
 	}
 
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+	infoView.EXPECT().UpdateNode(node)
+	node.EXPECT().Name().Return("node name").AnyTimes()
 	c.nodeChosen(node)
 
 	infoView.EXPECT().UpdateSample(sample)
