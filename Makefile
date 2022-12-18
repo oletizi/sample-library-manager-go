@@ -16,7 +16,7 @@ build: gen
 	go build -o $(BIN) ./...
 
 test: gen
-	courtney -o $(COVER_FILE) ./pkg/... && go tool cover -func $(COVER_FILE)
+	go install github.com/dave/courtney && courtney -o $(COVER_FILE) ./pkg/... && go tool cover -func $(COVER_FILE)
 
 clean:
 	$(GOCLEAN)
