@@ -49,3 +49,13 @@ func TestNewSample(t *testing.T) {
 	assert.Equal(t, sample.Name(), name)
 	assert.Equal(t, sample.Path(), path)
 }
+
+func TestNullConstructors(t *testing.T) {
+	assert.True(t, NullNullable().Null())
+	assert.True(t, NullEntity().Null())
+	assert.True(t, NullNode().Null())
+	assert.True(t, NullSample().Null())
+	assert.True(t, NullMeta().Null())
+	assert.True(t, NullSampleMeta().Null())
+	assert.True(t, NullAudioStream().Null())
+}

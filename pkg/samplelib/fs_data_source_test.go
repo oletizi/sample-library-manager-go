@@ -19,6 +19,7 @@ package samplelib
 
 import (
 	"github.com/stretchr/testify/assert"
+	"log"
 	"testing"
 )
 
@@ -99,4 +100,10 @@ func TestFsDataSource_MetaOf(t *testing.T) {
 	meta, err = source.MetaOf(sample)
 	assert.Equal(t, "", meta.Description())
 	assert.Equal(t, 0, len(meta.Keywords()))
+
+	stream := meta.AudioStream()
+	assert.NotNil(t, stream)
+	assert.False(t, stream.Null())
+	assert.Equal(t, "44100", stream.SampleRate())
+	log.Printf("sample rate: %s", stream.SampleRate())
 }

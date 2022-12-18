@@ -18,12 +18,15 @@
 package samplelib
 
 import (
+	"context"
 	"encoding/json"
 	"golang.org/x/exp/slices"
+	"gopkg.in/vansante/go-ffprobe.v2"
 	"log"
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 type fsDataSource struct {
@@ -76,7 +79,7 @@ func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
 func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
 	metaPath := path.Join(path.Dir(sample.Path()), ".meta", sample.Name()+".json")
 
-	meta := newSampleMeta(sample, "", []string{})
+	meta := newSampleMeta(sample, "", []string{}, NullAudioStream())
 	if _, err := os.Stat(metaPath); err == nil {
 		// XXX: This sooooo verbose. There must be a better way to do this.
 		// Need to declare this temporary struct b/c the json.Unmarshal function can only write to
@@ -90,7 +93,19 @@ func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
 		meta.description = data.Description
 		meta.keywords = data.Keywords
 	}
+	// Fetch metadata about audio file from the audio file
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFn()
 
+	data, err := ffprobe.ProbeURL(ctx, sample.Path())
+	if err != nil {
+		// notest
+		log.Printf("Error getting audio data: %v", err)
+	} else {
+		stream := data.FirstAudioStream()
+		audioStream := newAudioStream(sample, stream.SampleRate)
+		meta.audioStream = &audioStream
+	}
 	return &meta, nil
 }
 

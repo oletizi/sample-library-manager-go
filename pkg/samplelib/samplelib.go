@@ -29,6 +29,19 @@ func (n *nullable) Null() bool {
 	return n.isNull
 }
 
+func newNullable() nullable {
+	return nullable{false}
+}
+
+func nullNullable() nullable {
+	return nullable{true}
+}
+
+func NullNullable() Nullable {
+	n := nullNullable()
+	return &n
+}
+
 type Entity interface {
 	Nullable
 	Name() string
@@ -47,6 +60,15 @@ func newEntity(name string, path string) entity {
 		path:     path,
 		nullable: nullable{false},
 	}
+}
+
+func nullEntity() entity {
+	return entity{name: "", path: "", nullable: nullable{true}}
+}
+
+func NullEntity() Entity {
+	n := nullEntity()
+	return &n
 }
 
 func (e *entity) Name() string {
@@ -72,6 +94,15 @@ func newSample(name string, path string) Sample {
 	return &s
 }
 
+func nullSample() sample {
+	return sample{entity: nullEntity()}
+}
+
+func NullSample() Sample {
+	s := nullSample()
+	return &s
+}
+
 //go:generate mockgen -destination=../../mocks/samplelib/node.go . Node
 type Node interface {
 	Entity
@@ -87,14 +118,19 @@ func newNode(name string, path string, parent Node) node {
 	return node{entity: newEntity(name, path), parent: parent}
 }
 
-func (n *node) Parent() Node {
-	return n.parent
+func nullNode() node {
+	n := node{entity: nullEntity()}
+	n.parent = &n
+	return n
 }
 
 func NullNode() Node {
-	rv := &node{entity: entity{name: "", path: "", nullable: nullable{isNull: true}}}
-	rv.parent = rv
-	return rv
+	n := nullNode()
+	return &n
+}
+
+func (n *node) Parent() Node {
+	return n.parent
 }
 
 //go:generate mockgen -destination=../../mocks/samplelib/meta.go . Meta
@@ -110,6 +146,19 @@ type meta struct {
 	keywords    []string
 }
 
+func newMeta(name string, path string, description string, keywords []string) meta {
+	return meta{entity: newEntity(name, path), description: description, keywords: keywords}
+}
+
+func nullMeta() meta {
+	return meta{entity: nullEntity(), description: "", keywords: []string{}}
+}
+
+func NullMeta() Meta {
+	m := nullMeta()
+	return &m
+}
+
 func (m *meta) Description() string {
 	return m.description
 }
@@ -121,22 +170,65 @@ func (m *meta) Keywords() []string {
 //go:generate mockgen -destination=../../mocks/samplelib/samplemeta.go . SampleMeta
 type SampleMeta interface {
 	Meta
+	AudioStream() AudioStream
 }
 
 type sampleMeta struct {
 	meta
-	sample Sample
+	sample      Sample
+	audioStream AudioStream
 }
 
-func newSampleMeta(sample Sample, description string, keywords []string) sampleMeta {
+func (s *sampleMeta) AudioStream() AudioStream {
+	return s.audioStream
+}
+
+func newSampleMeta(sample Sample, description string, keywords []string, stream AudioStream) sampleMeta {
 	return sampleMeta{
-		meta: meta{
-			description: description,
-			keywords:    keywords,
-			entity:      entity{name: sample.Name(), path: sample.Path(), nullable: nullable{isNull: false}},
-		},
-		sample: sample,
+		meta:        newMeta(sample.Name(), sample.Path(), description, keywords),
+		sample:      sample,
+		audioStream: stream,
 	}
+}
+
+func nullSampleMeta() sampleMeta {
+	return sampleMeta{meta: nullMeta(), sample: NullSample(), audioStream: NullAudioStream()}
+}
+
+func NullSampleMeta() SampleMeta {
+	s := nullSampleMeta()
+	return &s
+}
+
+type AudioStream interface {
+	Nullable
+	SampleRate() string
+}
+
+func (s *audioStream) SampleRate() string {
+	return s.sampleRate
+}
+
+type audioStream struct {
+	nullable
+	sample     Sample
+	sampleRate string
+}
+
+func newAudioStream(sample Sample, sampleRate string) audioStream {
+	return audioStream{
+		nullable:   newNullable(),
+		sample:     sample,
+		sampleRate: sampleRate,
+	}
+}
+func nullAudioStream() audioStream {
+	return audioStream{sample: NullSample(), sampleRate: "", nullable: nullNullable()}
+}
+
+func NullAudioStream() AudioStream {
+	n := nullAudioStream()
+	return &n
 }
 
 //go:generate mockgen -destination=../../mocks/samplelib/datasource.go . DataSource
