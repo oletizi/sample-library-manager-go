@@ -70,3 +70,21 @@ func TestFileSystemDataSourceErrors(t *testing.T) {
 	assert.Nil(t, samples)
 	assert.NotNil(t, err)
 }
+
+func TestFsDataSource_MetaOf(t *testing.T) {
+	source := NewFilesystemDataSource("../../test/data/library/multi-level")
+	root, err := source.RootNode()
+	assert.Nil(t, err)
+
+	samples, err := source.SamplesOf(root)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(samples))
+
+	sample := samples[0]
+
+	meta, err := source.MetaOf(sample)
+	assert.Nil(t, err)
+	assert.NotNil(t, meta)
+	//keywords := meta.Keywords()
+	//assert.Equal(t, 2, len(keywords))
+}
