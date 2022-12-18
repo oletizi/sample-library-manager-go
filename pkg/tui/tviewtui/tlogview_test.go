@@ -26,7 +26,7 @@ import (
 func TestTLogView_Write(t *testing.T) {
 	tv := tview.NewTextView()
 	logView := &tLogView{
-		textView: πtv,
+		textView: tv,
 	}
 	v := "the string"
 	i, err := logView.Write([]byte(v))
