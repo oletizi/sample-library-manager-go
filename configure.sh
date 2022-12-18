@@ -16,7 +16,7 @@
 #
 #
 if [ $(uname) == "Linux" ]; then
-  sudo apt-get update && sudo apt-get install -y ffmpeg && ffprobe --help
+  sudo apt-get update && sudo apt-get install -y ffmpeg && ffprobe -version
 elif [ $(uname) == "Darwin" ]; then
   brew install ffmpeg
 fi
