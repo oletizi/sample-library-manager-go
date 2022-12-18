@@ -17,32 +17,25 @@
 
 package tui
 
-import "log"
+import (
+	"bytes"
+	"github.com/stretchr/testify/assert"
+	"log"
+	"testing"
+)
 
-//go:generate mockgen -destination=../../mocks/tui/logger.go . Logger
-type Logger interface {
-	Print(v ...any)
-	Println(v ...any)
-	Printf(format string, v ...any)
-}
+func TestLogger_Methods(t *testing.T) {
+	buf := bytes.NewBuffer([]byte{})
+	v := "v"
+	logger := NewLogger(log.New(buf, "", 0))
+	logger.Print(v)
+	assert.Equal(t, v+"\n", buf.String())
 
-// XXX: There's got to be a better way to do this than a brute force pass-through
-type logger struct {
-	l *log.Logger
-}
+	buf.Reset()
+	logger.Println(v)
+	assert.Equal(t, v+"\n", buf.String())
 
-func (l *logger) Print(v ...any) {
-	l.l.Print(v...)
-}
-
-func (l *logger) Println(v ...any) {
-	l.l.Println(v...)
-}
-
-func (l *logger) Printf(format string, v ...any) {
-	l.l.Printf(format, v...)
-}
-
-func NewLogger(l *log.Logger) Logger {
-	return &logger{l}
+	buf.Reset()
+	logger.Printf("%s", v)
+	assert.Equal(t, v+"\n", buf.String())
 }
