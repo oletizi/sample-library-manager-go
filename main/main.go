@@ -29,7 +29,6 @@ import (
 func main() {
 	flag.Parse()
 	args := flag.Args()
-	fmt.Printf("args length: %d", len(args))
 	rootDir := "." // default
 	if len(args) > 0 {
 		rootDir = args[0]

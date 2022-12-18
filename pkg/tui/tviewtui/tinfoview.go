@@ -37,8 +37,9 @@ func (t tInfoView) Update(v string) {
 }
 
 func (t tInfoView) UpdateNode(node samplelib.Node) {
-	//TODO implement me
-	panic("implement me")
+	t.textView.Clear()
+	_, err := t.textView.Write([]byte(t.display.DisplayNodeAsText(node)))
+	t.eh.Handle(err)
 }
 
 func (t tInfoView) UpdateSample(sample samplelib.Sample) {

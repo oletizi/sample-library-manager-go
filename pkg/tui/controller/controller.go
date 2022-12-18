@@ -42,6 +42,7 @@ type controller struct {
 func (c *controller) UpdateNode(node samplelib.Node) {
 	c.logger.Print("Calling UpdateNode on node: " + node.Name())
 	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
+	c.iv.UpdateNode(node)
 }
 
 // nodeSelected callback function for when a node is selected in the node view
