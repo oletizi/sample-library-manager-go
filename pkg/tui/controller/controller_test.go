@@ -19,9 +19,9 @@ package controller
 
 import (
 	"github.com/golang/mock/gomock"
-	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
-	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
-	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
+	mocksamplelib "github.com/oletizi/samplemgr/mocks/samplelib"
+	mocktui "github.com/oletizi/samplemgr/mocks/tui"
+	mockview "github.com/oletizi/samplemgr/mocks/tui/view"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -30,11 +30,11 @@ import (
 
 func TestNew(t *testing.T) {
 	ctl := gomock.NewController(t)
-	ds := mock_samplelib.NewMockDataSource(ctl)
-	errorHandler := mock_tui.NewMockErrorHandler(ctl)
-	nodeView := mock_view.NewMockNodeView(ctl)
-	infoView := mock_view.NewMockInfoView(ctl)
-	logView := mock_view.NewMockLogView(ctl)
+	ds := mocksamplelib.NewMockDataSource(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
+	nodeView := mockview.NewMockNodeView(ctl)
+	infoView := mockview.NewMockInfoView(ctl)
+	logView := mockview.NewMockLogView(ctl)
 
 	c := New(ds, errorHandler, nodeView, infoView, logView)
 	assert.NotNil(t, c)
@@ -43,12 +43,12 @@ func TestNew(t *testing.T) {
 func TestController_UpdateNode(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
-	ds := mock_samplelib.NewMockDataSource(ctl)
-	eh := mock_tui.NewMockErrorHandler(ctl)
-	nodeView := mock_view.NewMockNodeView(ctl)
-	infoView := mock_view.NewMockInfoView(ctl)
-	logView := mock_view.NewMockLogView(ctl)
-	node := mock_samplelib.NewMockNode(ctl)
+	ds := mocksamplelib.NewMockDataSource(ctl)
+	eh := mocktui.NewMockErrorHandler(ctl)
+	nodeView := mockview.NewMockNodeView(ctl)
+	infoView := mockview.NewMockInfoView(ctl)
+	logView := mockview.NewMockLogView(ctl)
+	node := mocksamplelib.NewMockNode(ctl)
 
 	// make a new controller
 	c := &controller{
@@ -71,9 +71,9 @@ func TestController_selectNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	infoView := mock_view.NewMockInfoView(ctl)
-	node := mock_samplelib.NewMockNode(ctl)
-	sample := mock_samplelib.NewMockSample(ctl)
+	infoView := mockview.NewMockInfoView(ctl)
+	node := mocksamplelib.NewMockNode(ctl)
+	sample := mocksamplelib.NewMockSample(ctl)
 
 	c := &controller{
 		iv: infoView,
@@ -90,11 +90,11 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	ds := mock_samplelib.NewMockDataSource(ctl)
-	nodeView := mock_view.NewMockNodeView(ctl)
-	infoView := mock_view.NewMockInfoView(ctl)
-	node := mock_samplelib.NewMockNode(ctl)
-	sample := mock_samplelib.NewMockSample(ctl)
+	ds := mocksamplelib.NewMockDataSource(ctl)
+	nodeView := mockview.NewMockNodeView(ctl)
+	infoView := mockview.NewMockInfoView(ctl)
+	node := mocksamplelib.NewMockNode(ctl)
+	sample := mocksamplelib.NewMockSample(ctl)
 
 	c := &controller{
 		ds:     ds,
