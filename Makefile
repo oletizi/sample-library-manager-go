@@ -12,6 +12,7 @@ get:
 
 gen: get
 	go generate ./...
+
 build: gen
 	go build -o $(BIN) ./...
 
@@ -27,3 +28,6 @@ install:
 
 cover: test
 	go tool cover -func $(COVER_FILE)
+
+docker-build:
+	(cd docker/builder && make run)

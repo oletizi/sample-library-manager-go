@@ -7,6 +7,7 @@ require (
 	github.com/rivo/tview v0.0.0-20221211160934-55d1ca9d3392
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a
+	gopkg.in/vansante/go-ffprobe.v2 v2.1.1
 )
 
 require (
