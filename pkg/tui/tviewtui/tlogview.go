@@ -15,11 +15,14 @@
  *
  */
 
-package main
+package tviewtui
 
-import "testing"
+import "github.com/rivo/tview"
 
-func TestBasics(t *testing.T) {
-	// XXX: This seems dumb.
-	main()
+type tLogView struct {
+	textView *tview.TextView
+}
+
+func (t *tLogView) Write(p []byte) (n int, err error) {
+	return t.textView.Write(p)
 }

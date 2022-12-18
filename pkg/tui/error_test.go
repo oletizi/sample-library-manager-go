@@ -15,37 +15,27 @@
  *
  */
 
-package main
+package tui
 
 import (
-	"flag"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
-	"log"
-	"os"
+	"errors"
+	"github.com/golang/mock/gomock"
+	mocktui "github.com/oletizi/samplemgr/mocks/tui"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
-	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	tui, err := tviewtui.New(ds)
-	if err != nil {
-		log.Default().Fatal(err)
-	}
-	err = tui.Run()
-	if err != nil {
-		log.Default().Fatal(err)
-	}
+func TestErrorHandler(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	logger := mocktui.NewMockLogger(ctl)
+
+	handler := NewErrorHandler(logger)
+	assert.NotNil(t, handler)
+
+	err := errors.New("my error")
+
+	logger.EXPECT().Print(err)
+	handler.Handle(err)
 }

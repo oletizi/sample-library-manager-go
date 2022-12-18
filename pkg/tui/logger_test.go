@@ -15,37 +15,27 @@
  *
  */
 
-package main
+package tui
 
 import (
-	"flag"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
+	"bytes"
+	"github.com/stretchr/testify/assert"
 	"log"
-	"os"
+	"testing"
 )
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
-	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	tui, err := tviewtui.New(ds)
-	if err != nil {
-		log.Default().Fatal(err)
-	}
-	err = tui.Run()
-	if err != nil {
-		log.Default().Fatal(err)
-	}
+func TestLogger_Methods(t *testing.T) {
+	buf := bytes.NewBuffer([]byte{})
+	v := "v"
+	logger := NewLogger(log.New(buf, "", 0))
+	logger.Print(v)
+	assert.Equal(t, v+"\n", buf.String())
+
+	buf.Reset()
+	logger.Println(v)
+	assert.Equal(t, v+"\n", buf.String())
+
+	buf.Reset()
+	logger.Printf("%s", v)
+	assert.Equal(t, v+"\n", buf.String())
 }

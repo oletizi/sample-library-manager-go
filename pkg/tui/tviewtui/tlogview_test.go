@@ -15,37 +15,21 @@
  *
  */
 
-package main
+package tviewtui
 
 import (
-	"flag"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
-	"log"
-	"os"
+	"github.com/rivo/tview"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
+func TestTLogView_Write(t *testing.T) {
+	tv := tview.NewTextView()
+	logView := &tLogView{
+		textView: tv,
 	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	tui, err := tviewtui.New(ds)
-	if err != nil {
-		log.Default().Fatal(err)
-	}
-	err = tui.Run()
-	if err != nil {
-		log.Default().Fatal(err)
-	}
+	v := "the string"
+	i, err := logView.Write([]byte(v))
+	assert.Nil(t, err)
+	assert.Equal(t, len([]byte(v)), i)
 }

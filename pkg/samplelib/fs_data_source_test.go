@@ -28,14 +28,14 @@ func TestFilesystemDataSource(t *testing.T) {
 	rootNode, err := dataSource.RootNode()
 	assert.Nil(t, err)
 	assert.NotNil(t, rootNode)
-	assert.Equal(t, "multi-level", rootNode.Name)
+	assert.Equal(t, "multi-level", rootNode.Name())
 
 	// check Children
 	children, err := dataSource.ChildrenOf(rootNode)
 	assert.Nil(t, err)
 	assert.NotNil(t, children)
 	assert.Equal(t, 2, len(children))
-	assert.Equal(t, "level-2a", children[0].Name)
+	assert.Equal(t, "level-2a", children[0].Name())
 
 	// check the Children of a subdirectory
 	child := children[0]
@@ -47,13 +47,13 @@ func TestFilesystemDataSource(t *testing.T) {
 	samples, err := dataSource.SamplesOf(rootNode)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(samples))
-	assert.Equal(t, "cabasa.wav", samples[0].Name)
+	assert.Equal(t, "cabasa.wav", samples[0].Name())
 
 	// check the Samples of a subdirectory
 	samples, err = dataSource.SamplesOf(child)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(samples))
-	assert.Equal(t, "kick.wav", samples[0].Name)
+	assert.Equal(t, "kick.wav", samples[0].Name())
 }
 
 func TestFileSystemDataSourceErrors(t *testing.T) {

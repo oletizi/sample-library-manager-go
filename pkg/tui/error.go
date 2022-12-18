@@ -15,37 +15,23 @@
  *
  */
 
-package main
+package tui
 
-import (
-	"flag"
-	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
-	"log"
-	"os"
-)
+//go:generate mockgen -destination=../../mocks/tui/error.go . ErrorHandler
+type ErrorHandler interface {
+	Handle(error)
+}
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
-	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	tui, err := tviewtui.New(ds)
+type errorHandler struct {
+	logger Logger
+}
+
+func (e *errorHandler) Handle(err error) {
 	if err != nil {
-		log.Default().Fatal(err)
+		e.logger.Print(err)
 	}
-	err = tui.Run()
-	if err != nil {
-		log.Default().Fatal(err)
-	}
+}
+
+func NewErrorHandler(logger Logger) ErrorHandler {
+	return &errorHandler{logger}
 }

@@ -15,37 +15,32 @@
  *
  */
 
-package main
+package tviewtui
 
 import (
-	"flag"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
-	"github.com/oletizi/samplemgr/pkg/tui/tviewtui"
-	"log"
-	"os"
+	"github.com/oletizi/samplemgr/pkg/tui"
+	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/rivo/tview"
 )
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-	rootDir := "." // default
-	if len(args) > 0 {
-		rootDir = args[0]
-		info, err := os.Stat(rootDir)
-		if err != nil {
-			log.Default().Fatal(err)
-		}
-		if !info.IsDir() {
-			log.Default().Fatal("Not a directory: " + rootDir)
-		}
-	}
-	ds := samplelib.NewFilesystemDataSource(rootDir)
-	tui, err := tviewtui.New(ds)
-	if err != nil {
-		log.Default().Fatal(err)
-	}
-	err = tui.Run()
-	if err != nil {
-		log.Default().Fatal(err)
-	}
+type tInfoView struct {
+	textView *tview.TextView
+	logger   tui.Logger
+	eh       tui.ErrorHandler
+	display  view.Display
+}
+
+func (t *tInfoView) Update(v string) {
+	t.textView.Clear()
+	_, err := t.textView.Write([]byte(v))
+	t.eh.Handle(err)
+}
+
+func (t *tInfoView) UpdateNode(node samplelib.Node) {
+	t.Update(t.display.DisplayNodeAsText(node))
+}
+
+func (t *tInfoView) UpdateSample(sample samplelib.Sample) {
+	t.Update(t.display.DisplaySampleAsListing(sample))
 }

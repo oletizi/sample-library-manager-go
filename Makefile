@@ -1,5 +1,6 @@
-.PHONY: all test cover
+.PHONY: all test cover gen get
 COVER_FILE=./.coverage.txt
+MOCKS=./mocks
 BIN=bin/
 
 all: get build test
@@ -7,17 +8,19 @@ all: get build test
 default: all
 
 get:
-	go get ./...
+	go install github.com/golang/mock/mockgen@v1.6.0 && go get -u github.com/dave/courtney && go get ./...
 
-build:
+gen: get
+	go generate ./...
+build: gen
 	go build -o $(BIN) ./...
 
-test:
-	go test ./... -v -coverprofile $(COVER_FILE) && go tool cover -func $(COVER_FILE)
+test: gen
+	go install github.com/dave/courtney && courtney -o $(COVER_FILE) ./pkg/... && go tool cover -func $(COVER_FILE)
 
 clean:
 	$(GOCLEAN)
-	rm -f $(BIN) || true &&	rm $(COVER_FILE) || true
+	rm -rf $(BIN) || true && rm $(COVER_FILE) || true && rm -rf $(MOCKS)
 
 install:
 	go install ./...
