@@ -18,29 +18,33 @@
 package tviewtui
 
 import (
-	"github.com/oletizi/samplemgr/pkg/samplelib"
+	"github.com/golang/mock/gomock"
+	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
+	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
 	"github.com/oletizi/samplemgr/pkg/tui"
-	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"github.com/rivo/tview"
+	"log"
+	"testing"
 )
 
-type tInfoView struct {
-	textView *tview.TextView
-	logger   tui.Logger
-	eh       tui.ErrorHandler
-	display  view.Display
-}
+func TestTInfoView_UpdateMethods(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
 
-func (t *tInfoView) Update(v string) {
-	t.textView.Clear()
-	_, err := t.textView.Write([]byte(v))
-	t.eh.Handle(err)
-}
+	display := mock_view.NewMockDisplay(ctl)
+	ti := &tInfoView{
+		textView: tview.NewTextView(),
+		eh:       tui.NewErrorHandler(log.Default()),
+		display:  display,
+	}
+	ti.Update("Some text")
 
-func (t *tInfoView) UpdateNode(node samplelib.Node) {
-	t.Update(t.display.DisplayNodeAsText(node))
-}
+	node := mock_samplelib.NewMockNode(ctl)
+	display.EXPECT().DisplayNodeAsText(node)
 
-func (t *tInfoView) UpdateSample(sample samplelib.Sample) {
-	t.Update(t.display.DisplaySampleAsListing(sample))
+	ti.UpdateNode(node)
+
+	sample := mock_samplelib.NewMockSample(ctl)
+	display.EXPECT().DisplaySampleAsListing(sample)
+	ti.UpdateSample(sample)
 }

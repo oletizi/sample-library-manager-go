@@ -85,8 +85,26 @@ func (t *tNodeView) UpdateNode(
 			nodeChosen(thisChild)
 		})
 	}
+
+	// Get the samples of the new node
+	samples, err := ds.SamplesOf(node)
+	t.eh.Handle(err)
+	for _, sample := range samples {
+		text := t.display.DisplaySampleAsListing(sample)
+		thisSample := sample
+		t.list.AddItem(text, "", 0, func() {
+			t.logger.Print("Sample chosen: " + thisSample.Name())
+			sampleSelected(thisSample)
+		})
+	}
+
+	// set the callback function for when a new list element is selected (e.g., w/ arrow keys)
 	t.list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 		t.logger.Printf("Node view changed: index: %d", index)
-		nodeSelected(nodes[index])
+		if index < len(nodes) {
+			nodeSelected(nodes[index])
+		} else {
+			sampleSelected(samples[index-len(nodes)])
+		}
 	})
 }
