@@ -103,7 +103,8 @@ func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
 		log.Printf("Error getting audio data: %v", err)
 	} else {
 		stream := data.FirstAudioStream()
-		audioStream := newAudioStream(sample, stream.SampleRate)
+
+		audioStream := newAudioStream(sample, stream.SampleRate, stream.BitsPerSample)
 		meta.audioStream = &audioStream
 	}
 	return &meta, nil

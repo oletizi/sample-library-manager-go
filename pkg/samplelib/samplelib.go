@@ -200,26 +200,34 @@ func NullSampleMeta() SampleMeta {
 	return &s
 }
 
+//go:generate mockgen -destination=../../mocks/samplelib/audiostream.go . AudioStream
 type AudioStream interface {
 	Nullable
 	SampleRate() string
+	BitDepth() int
 }
 
 func (s *audioStream) SampleRate() string {
 	return s.sampleRate
 }
 
+func (s *audioStream) BitDepth() int {
+	return s.bitDepth
+}
+
 type audioStream struct {
 	nullable
 	sample     Sample
 	sampleRate string
+	bitDepth   int
 }
 
-func newAudioStream(sample Sample, sampleRate string) audioStream {
+func newAudioStream(sample Sample, sampleRate string, bitDepth int) audioStream {
 	return audioStream{
 		nullable:   newNullable(),
 		sample:     sample,
 		sampleRate: sampleRate,
+		bitDepth:   bitDepth,
 	}
 }
 func nullAudioStream() audioStream {

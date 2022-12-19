@@ -42,17 +42,17 @@ type controller struct {
 func (c *controller) UpdateNode(node samplelib.Node) {
 	c.logger.Print("Calling UpdateNode on node: " + node.Name())
 	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
-	c.iv.UpdateNode(node)
+	c.iv.UpdateNode(c.ds, node)
 }
 
 // nodeSelected callback function for when a node is selected in the node view
 func (c *controller) nodeSelected(node samplelib.Node) {
-	c.iv.UpdateNode(node)
+	c.iv.UpdateNode(c.ds, node)
 }
 
 // sampleSelected callback function for when a sample is selected in the node view
 func (c *controller) sampleSelected(sample samplelib.Sample) {
-	c.iv.UpdateSample(sample)
+	c.iv.UpdateSample(c.ds, sample)
 }
 
 // nodeChosen callback function for when a node is chosen in the node view

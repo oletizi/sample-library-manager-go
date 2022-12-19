@@ -31,6 +31,7 @@ func TestTInfoView_UpdateMethods(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	ds := mock_samplelib.NewMockDataSource(ctl)
 	display := mock_view.NewMockDisplay(ctl)
 	ti := &tInfoView{
 		textView: tview.NewTextView(),
@@ -40,11 +41,11 @@ func TestTInfoView_UpdateMethods(t *testing.T) {
 	ti.Update("Some text")
 
 	node := mock_samplelib.NewMockNode(ctl)
-	display.EXPECT().DisplayNodeAsText(node)
+	display.EXPECT().DisplayNodeAsText(ds, node)
 
-	ti.UpdateNode(node)
+	ti.UpdateNode(ds, node)
 
 	sample := mock_samplelib.NewMockSample(ctl)
-	display.EXPECT().DisplaySampleAsListing(sample)
-	ti.UpdateSample(sample)
+	display.EXPECT().DisplaySampleAsText(ds, sample)
+	ti.UpdateSample(ds, sample)
 }

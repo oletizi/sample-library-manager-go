@@ -43,8 +43,8 @@ type NodeView interface {
 //go:generate mockgen -destination=../../../mocks/tui/view/infoview.go . InfoView
 type InfoView interface {
 	TextView
-	UpdateNode(node samplelib.Node)
-	UpdateSample(sample samplelib.Sample)
+	UpdateNode(ds samplelib.DataSource, node samplelib.Node)
+	UpdateSample(ds samplelib.DataSource, sample samplelib.Sample)
 }
 
 //go:generate mockgen -destination=../../../mocks/tui/view/logview.go . LogView

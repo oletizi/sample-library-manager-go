@@ -22,6 +22,8 @@ import (
 	_ "embed"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
+	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -39,10 +41,10 @@ var sampleListingTemplateString string
 
 //go:generate mockgen -destination=../../../mocks/tui/view/displayer.go . Display
 type Display interface {
-	DisplayNodeAsText(node samplelib.Node) string
+	DisplayNodeAsText(ds samplelib.DataSource, node samplelib.Node) string
 	DisplayNodeAsListing(node samplelib.Node, isParent bool) string
 	DisplaySampleAsListing(sample samplelib.Sample) string
-	DisplaySampleAsText(sample samplelib.Sample) string
+	DisplaySampleAsText(ds samplelib.DataSource, sample samplelib.Sample) string
 }
 
 type display struct {
@@ -59,14 +61,30 @@ func (d *display) DisplaySampleAsListing(sample samplelib.Sample) string {
 	return render(d.sampleListingTemplate, data, d.errorHandler)
 }
 
-func (d *display) DisplaySampleAsText(sample samplelib.Sample) string {
+func (d *display) DisplaySampleAsText(ds samplelib.DataSource, sample samplelib.Sample) string {
 	data := struct {
-		Name string
-		Path string
+		Name       string
+		Path       string
+		SampleRate string
+		BitDepth   string
+		Keywords   string
 	}{
 		sample.Name(),
 		sample.Path(),
+		"unknown",
+		"unknown",
+		"",
 	}
+	meta, err := ds.MetaOf(sample)
+	if err != nil {
+		// notest
+		d.logger.Println(err)
+	} else {
+		data.Keywords = strings.Join(meta.Keywords(), ", ")
+		data.SampleRate = meta.AudioStream().SampleRate()
+		data.BitDepth = strconv.Itoa(meta.AudioStream().BitDepth())
+	}
+
 	return render(d.sampleTextTemplate, data, d.errorHandler)
 }
 
@@ -80,7 +98,7 @@ func render(template *template.Template, data any, handler tui.ErrorHandler) str
 	return buf.String()
 }
 
-func (d *display) DisplayNodeAsText(node samplelib.Node) string {
+func (d *display) DisplayNodeAsText(_ samplelib.DataSource, node samplelib.Node) string {
 	data := struct {
 		Name string
 		Path string

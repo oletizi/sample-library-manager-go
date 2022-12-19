@@ -23,6 +23,7 @@ import (
 	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"strconv"
 	"strings"
 	"testing"
 	"text/template"
@@ -44,6 +45,9 @@ func TestSampleDisplay(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	ds := mocksamplelib.NewMockDataSource(ctl)
+	sampleMeta := mocksamplelib.NewMockSampleMeta(ctl)
+	audioStream := mocksamplelib.NewMockAudioStream(ctl)
 	samplePath := "the sample path"
 	sampleName := "the sample name"
 	sample := mocksamplelib.NewMockSample(ctl)
@@ -53,12 +57,25 @@ func TestSampleDisplay(t *testing.T) {
 	sample.EXPECT().Name().Return(sampleName)
 	errorHandler.EXPECT().Handle(gomock.Any()).MinTimes(1)
 
+	ds.EXPECT().MetaOf(sample).Return(sampleMeta, nil)
+
+	keywords := []string{"keyword1", "keyword2"}
+	sampleMeta.EXPECT().Keywords().Return(keywords)
+	sampleMeta.EXPECT().AudioStream().MinTimes(1).Return(audioStream)
+	sampleRate := "100"
+	bitDepth := 8
+	audioStream.EXPECT().SampleRate().Return(sampleRate)
+	audioStream.EXPECT().BitDepth().Return(bitDepth)
+	// do the thing!
 	display, err := NewDisplay(log.Default(), errorHandler)
+
 	assert.Nil(t, err)
 	assert.NotNil(t, display)
-	text := display.DisplaySampleAsText(sample)
+	text := display.DisplaySampleAsText(ds, sample)
 	assert.True(t, strings.Contains(text, samplePath))
 	assert.True(t, strings.Contains(text, sampleName))
+	assert.True(t, strings.Contains(text, sampleRate))
+	assert.True(t, strings.Contains(text, strconv.Itoa(bitDepth)))
 
 	sample.EXPECT().Name().Return(sampleName)
 	text = display.DisplaySampleAsListing(sample)
@@ -81,7 +98,7 @@ func TestNodeDisplay(t *testing.T) {
 	d, err := NewDisplay(log.Default(), errorHandler)
 	assert.Nil(t, err)
 
-	text := d.DisplayNodeAsText(node)
+	text := d.DisplayNodeAsText(nil, node)
 	assert.NotNil(t, text)
 	assert.True(t, strings.Contains(text, nodePath))
 	assert.True(t, strings.Contains(text, nodeName))

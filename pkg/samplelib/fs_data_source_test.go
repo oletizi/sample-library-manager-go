@@ -105,5 +105,6 @@ func TestFsDataSource_MetaOf(t *testing.T) {
 	assert.NotNil(t, stream)
 	assert.False(t, stream.Null())
 	assert.Equal(t, "44100", stream.SampleRate())
+	assert.Equal(t, 16, stream.BitDepth())
 	log.Printf("sample rate: %s", stream.SampleRate())
 }
