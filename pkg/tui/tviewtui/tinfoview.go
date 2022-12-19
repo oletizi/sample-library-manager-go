@@ -37,10 +37,10 @@ func (t *tInfoView) Update(v string) {
 	t.eh.Handle(err)
 }
 
-func (t *tInfoView) UpdateNode(node samplelib.Node) {
-	t.Update(t.display.DisplayNodeAsText(node))
+func (t *tInfoView) UpdateNode(ds samplelib.DataSource, node samplelib.Node) {
+	t.Update(t.display.DisplayNodeAsText(ds, node))
 }
 
-func (t *tInfoView) UpdateSample(sample samplelib.Sample) {
-	t.Update(t.display.DisplaySampleAsListing(sample))
+func (t *tInfoView) UpdateSample(ds samplelib.DataSource, sample samplelib.Sample) {
+	t.Update(t.display.DisplaySampleAsText(ds, sample))
 }

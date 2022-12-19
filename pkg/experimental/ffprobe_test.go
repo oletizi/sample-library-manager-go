@@ -32,8 +32,8 @@ func Test_ffProbe(t *testing.T) {
 	data, err := ffprobe.ProbeURL(ctx, "../../test/data/library/one-level/hh.wav")
 	if err != nil {
 		log.Panicf("Error getting data: %v", err)
-	} else {
-		log.Println("format: " + data.Format.FormatName)
 	}
+	stream := data.FirstAudioStream()
+	log.Printf("Stream: %v", stream)
 
 }

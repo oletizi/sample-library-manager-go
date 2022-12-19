@@ -29,8 +29,8 @@ func TestNullNode(t *testing.T) {
 
 func TestNode(t *testing.T) {
 	node := &node{
+		entity: entity{name: "name"},
 		parent: NullNode(),
-		name:   "name",
 	}
 	assert.False(t, node.Null())
 	assert.NotNil(t, node.Parent())
@@ -41,9 +41,21 @@ func TestNode(t *testing.T) {
 func TestNewSample(t *testing.T) {
 	name := "the name"
 	path := "the path"
-	sample := NewSample(name, path)
+	sample := &sample{
+		entity: entity{name: name, path: path, nullable: nullable{isNull: false}},
+	}
 	assert.NotNil(t, sample)
 	assert.False(t, sample.Null())
 	assert.Equal(t, sample.Name(), name)
 	assert.Equal(t, sample.Path(), path)
+}
+
+func TestNullConstructors(t *testing.T) {
+	assert.True(t, NullNullable().Null())
+	assert.True(t, NullEntity().Null())
+	assert.True(t, NullNode().Null())
+	assert.True(t, NullSample().Null())
+	assert.True(t, NullMeta().Null())
+	assert.True(t, NullSampleMeta().Null())
+	assert.True(t, NullAudioStream().Null())
 }

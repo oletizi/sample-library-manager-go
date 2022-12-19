@@ -61,7 +61,7 @@ func TestController_UpdateNode(t *testing.T) {
 	}
 	// XXX: can't figure out how to get function arguments to match
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
-	infoView.EXPECT().UpdateNode(node)
+	infoView.EXPECT().UpdateNode(ds, node)
 	node.EXPECT().Name()
 	assert.NotNil(t, c)
 	c.UpdateNode(node)
@@ -71,18 +71,20 @@ func TestController_selectNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	ds := mocksamplelib.NewMockDataSource(ctl)
 	infoView := mockview.NewMockInfoView(ctl)
 	node := mocksamplelib.NewMockNode(ctl)
 	sample := mocksamplelib.NewMockSample(ctl)
 
 	c := &controller{
+		ds: ds,
 		iv: infoView,
 	}
 
-	infoView.EXPECT().UpdateNode(node)
+	infoView.EXPECT().UpdateNode(ds, node)
 	c.nodeSelected(node)
 
-	infoView.EXPECT().UpdateSample(sample)
+	infoView.EXPECT().UpdateSample(ds, sample)
 	c.sampleSelected(sample)
 }
 
@@ -104,10 +106,10 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	}
 
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
-	infoView.EXPECT().UpdateNode(node)
+	infoView.EXPECT().UpdateNode(ds, node)
 	node.EXPECT().Name().Return("node name").AnyTimes()
 	c.nodeChosen(node)
 
-	infoView.EXPECT().UpdateSample(sample)
+	infoView.EXPECT().UpdateSample(ds, sample)
 	c.sampleChosen(sample)
 }
