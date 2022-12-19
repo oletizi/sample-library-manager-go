@@ -30,4 +30,4 @@ cover: test
 	go tool cover -func $(COVER_FILE)
 
 docker-build:
-	(cd docker/builder && make run)
+	(cd docker/builder-ubuntu && make run)
