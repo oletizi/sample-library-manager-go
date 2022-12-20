@@ -30,7 +30,7 @@ import (
 )
 
 func TestBeep(t *testing.T) {
-	f, err := os.Open("../../test/data/library/multi-level/hh.wav")
+	f, err := os.Open("../test/data/library/multi-level/hh.wav")
 	assert.Nil(t, err)
 
 	streamer, format, err := wav.Decode(f)
@@ -44,7 +44,7 @@ func TestBeep(t *testing.T) {
 
 	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	if err != nil {
-		log.Println("Can't open speaker. Probably no sound card. Shouldn't be testing that in CI anyway.")
+		log.Println("Can't open speaker. Probably no audio card. Shouldn't be testing that in CI anyway.")
 		return
 	}
 

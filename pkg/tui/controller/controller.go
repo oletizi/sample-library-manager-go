@@ -18,6 +18,7 @@
 package controller
 
 import (
+	"github.com/oletizi/samplemgr/pkg/audio"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
@@ -30,6 +31,7 @@ type Controller interface {
 }
 
 type controller struct {
+	ac     audio.Context
 	ds     samplelib.DataSource
 	eh     tui.ErrorHandler
 	nv     view.NodeView
@@ -63,12 +65,28 @@ func (c *controller) nodeChosen(node samplelib.Node) {
 
 // sampleChosen callback function for when a sample is chosen in the node view
 func (c *controller) sampleChosen(sample samplelib.Sample) {
-	// for now, choosing a sample is the same as selecting a sample
-	c.sampleSelected(sample)
+	// Play the sample
+	player, err := c.ac.PlayerFor(sample.Path())
+	if err == nil {
+		player.Play(func() {
+			c.logger.Println("Done playing sample! Closing the player...")
+			err := player.Close()
+			c.eh.Handle(err)
+		})
+	}
+	c.eh.Handle(err)
 }
 
-func New(ds samplelib.DataSource, eh tui.ErrorHandler, nodeView view.NodeView, infoView view.InfoView, logView view.LogView) Controller {
+func New(
+	ac audio.Context,
+	ds samplelib.DataSource,
+	eh tui.ErrorHandler,
+	nodeView view.NodeView,
+	infoView view.InfoView,
+	logView view.LogView,
+) Controller {
 	return &controller{
+		ac:     ac,
 		ds:     ds,
 		eh:     eh,
 		nv:     nodeView,
