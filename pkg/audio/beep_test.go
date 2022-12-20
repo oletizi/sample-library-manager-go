@@ -25,12 +25,6 @@ import (
 	"testing"
 )
 
-func TestNewBeepContext(t *testing.T) {
-	ctx, err := NewBeepContext()
-	assert.Nil(t, err)
-	assert.NotNil(t, ctx)
-}
-
 func TestBeepContext_PlayerFor(t *testing.T) {
 	ctx := &beepContext{}
 	player, err := ctx.PlayerFor("../../test/data/library/multi-level/hh.wav")

@@ -49,6 +49,7 @@ type beepContext struct {
 }
 
 func NewBeepContext() (Context, error) {
+	// notest
 	sampleRate := beep.SampleRate(44100)
 	// XXX: This should probably be done somewhere else... it doesn't need to be initialized every time.
 	err := speaker.Init(sampleRate, sampleRate.N(time.Second/10))
