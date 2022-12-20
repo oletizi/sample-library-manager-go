@@ -18,21 +18,34 @@
 package audio
 
 import (
-	"fmt"
+	"github.com/faiface/beep"
 	"github.com/golang/mock/gomock"
 	mockmock "github.com/oletizi/samplemgr/mocks/audio/mock"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"testing"
-	"time"
 )
+
+func TestNewBeepContext(t *testing.T) {
+	ctx, err := NewBeepContext()
+	assert.Nil(t, err)
+	assert.NotNil(t, ctx)
+}
+
+func TestBeepContext_PlayerFor(t *testing.T) {
+	ctx := &beepContext{}
+	player, err := ctx.PlayerFor("../../test/data/library/multi-level/hh.wav")
+	assert.Nil(t, err)
+	assert.NotNil(t, player)
+}
 
 func TestBeepPlayer_Close(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
 	streamer := mockmock.NewMockFakeStreamer(ctl)
-	player := &beepPlayer{streamer: streamer}
+	player := &beepPlayer{
+		streamer: streamer,
+	}
 
 	// expect player.CLose() to call streamer.Close()
 	streamer.EXPECT().Close()
@@ -41,23 +54,20 @@ func TestBeepPlayer_Close(t *testing.T) {
 }
 
 func TestBeepPlayer_Play(t *testing.T) {
-	ctx, err := NewBeepContext()
-	assert.Nil(t, err)
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
 
-	player, err := ctx.PlayerFor("../../test/data/library/multi-level/hh.wav")
-	assert.Nil(t, err)
+	fakeSpeaker := mockmock.NewMockFakeSpeaker(ctl)
+	streamer := mockmock.NewMockFakeStreamer(ctl)
 
-	done := make(chan bool)
-
-	player.Play(func() {
-		log.Println("Done playing.")
-		done <- true
-	})
-	select {
-	case c := <-done:
-		fmt.Println("Done: ", c)
-	case <-time.After(1000 * time.Millisecond):
-		//log.Panic("Timeout!")
-		log.Printf("Timeout!")
+	player := &beepPlayer{
+		play:              fakeSpeaker.Play,
+		speakerSampleRate: 44100,
+		streamer:          streamer,
+		format:            &beep.Format{SampleRate: 44100, NumChannels: 2, Precision: 4},
 	}
+
+	fakeSpeaker.EXPECT().Play(gomock.Any())
+	player.Play(func() {})
+
 }

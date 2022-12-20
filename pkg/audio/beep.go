@@ -27,15 +27,16 @@ import (
 )
 
 type beepPlayer struct {
-	context  *beepContext
-	streamer beep.StreamSeekCloser
-	format   *beep.Format
-	file     *os.File
+	// indirection to support mocking
+	play              func(s ...beep.Streamer)
+	speakerSampleRate beep.SampleRate
+	streamer          beep.StreamSeekCloser
+	format            *beep.Format
 }
 
 func (b *beepPlayer) Play(completedCallback func()) {
-	resampled := beep.Resample(4, b.format.SampleRate, b.context.speakerSampleRate, b.streamer)
-	speaker.Play(beep.Seq(resampled, beep.Callback(completedCallback)))
+	resampled := beep.Resample(4, b.format.SampleRate, b.speakerSampleRate, b.streamer)
+	b.play(beep.Seq(resampled, beep.Callback(completedCallback)))
 }
 
 func (b *beepPlayer) Close() error {
@@ -57,8 +58,8 @@ func NewBeepContext() (Context, error) {
 	return &beepContext{speakerSampleRate: sampleRate}, err
 }
 
-func (b *beepContext) PlayerFor(url string) (Player, error) {
-	// XXX: Need to close files!!!
+func (c *beepContext) PlayerFor(url string) (Player, error) {
+	// NOTE: Files are closed by beep when the stream is closed
 	f, err := os.Open(url)
 	if err != nil {
 		return nil, err
@@ -71,9 +72,9 @@ func (b *beepContext) PlayerFor(url string) (Player, error) {
 	}
 
 	return &beepPlayer{
-		file:     f,
-		context:  b,
-		streamer: streamer,
-		format:   &format,
+		play:              speaker.Play,
+		speakerSampleRate: c.speakerSampleRate,
+		streamer:          streamer,
+		format:            &format,
 	}, nil
 }

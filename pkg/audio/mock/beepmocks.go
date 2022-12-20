@@ -26,3 +26,10 @@ import "github.com/faiface/beep"
 type FakeStreamer interface {
 	beep.StreamSeekCloser
 }
+
+// FakeSpeaker is a proxy for functions in the beep "speaker" package just for mocking.
+//
+//go:generate mockgen -destination ../../../mocks/audio/mock/fakespeaker.go . FakeSpeaker
+type FakeSpeaker interface {
+	Play(s ...beep.Streamer)
+}
