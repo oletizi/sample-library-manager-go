@@ -19,6 +19,7 @@ package controller
 
 import (
 	"github.com/golang/mock/gomock"
+	mock_audio "github.com/oletizi/samplemgr/mocks/audio"
 	mocksamplelib "github.com/oletizi/samplemgr/mocks/samplelib"
 	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	mockview "github.com/oletizi/samplemgr/mocks/tui/view"
@@ -30,13 +31,14 @@ import (
 
 func TestNew(t *testing.T) {
 	ctl := gomock.NewController(t)
+	ac := mock_audio.NewMockContext(ctl)
 	ds := mocksamplelib.NewMockDataSource(ctl)
 	errorHandler := mocktui.NewMockErrorHandler(ctl)
 	nodeView := mockview.NewMockNodeView(ctl)
 	infoView := mockview.NewMockInfoView(ctl)
 	logView := mockview.NewMockLogView(ctl)
 
-	c := New(ds, errorHandler, nodeView, infoView, logView)
+	c := New(ac, ds, errorHandler, nodeView, infoView, logView)
 	assert.NotNil(t, c)
 }
 
@@ -92,13 +94,18 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	audioContext := mock_audio.NewMockContext(ctl)
 	ds := mocksamplelib.NewMockDataSource(ctl)
 	nodeView := mockview.NewMockNodeView(ctl)
 	infoView := mockview.NewMockInfoView(ctl)
 	node := mocksamplelib.NewMockNode(ctl)
 	sample := mocksamplelib.NewMockSample(ctl)
+	audioPlayer := mock_audio.NewMockPlayer(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
 
 	c := &controller{
+		eh:     errorHandler,
+		ac:     audioContext,
 		ds:     ds,
 		nv:     nodeView,
 		iv:     infoView,
@@ -110,6 +117,43 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	node.EXPECT().Name().Return("node name").AnyTimes()
 	c.nodeChosen(node)
 
-	infoView.EXPECT().UpdateSample(ds, sample)
+	//infoView.EXPECT().UpdateSample(ds, sample)
+	sampleUrl := "the sample url"
+
+	sample.EXPECT().Path().Return(sampleUrl)
+	audioContext.EXPECT().PlayerFor(sampleUrl).Return(audioPlayer, nil)
+	// XXX: Not sure yet how to match function parameters
+	matcher := &callbackMatcher{}
+	// ensure the audio player is actually played
+	audioPlayer.EXPECT().Play(matcher)
+	// ensure the error handler is called (with nil)
+	errorHandler.EXPECT().Handle(gomock.Nil())
+	log.Println("About to call c.sampleChosen(sample)...")
 	c.sampleChosen(sample)
+
+	// get the expected callback to Play(func())
+	callback := matcher.args[0].(func())
+
+	// ensure the callback to call close on the audio player (which should close any open resources like files)
+	audioPlayer.EXPECT().Close()
+
+	// ensure the callback passes the error return value from Player.Close() to be sent to the error handler
+	// (and that the error is nil)
+	errorHandler.EXPECT().Handle(gomock.Nil())
+
+	// invoke the callback to test its behavior
+	callback()
+}
+
+func (f *callbackMatcher) Matches(x interface{}) bool {
+	f.args = append(f.args, x)
+	return true
+}
+
+func (f *callbackMatcher) String() string {
+	return "Matches a callback function and stores it so you can call it later to cover it."
+}
+
+type callbackMatcher struct {
+	args []interface{}
 }

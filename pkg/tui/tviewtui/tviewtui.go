@@ -18,6 +18,7 @@
 package tviewtui
 
 import (
+	"github.com/oletizi/samplemgr/pkg/audio"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/controller"
@@ -65,7 +66,11 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	rootNode, err := ds.RootNode()
 	errorHandler.Handle(err)
 
-	ctl := controller.New(ds, errorHandler, nodeView, infoView, logView)
+	audioContext, err := audio.NewBeepContext()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView)
 	ctl.UpdateNode(rootNode)
 
 	return &tApp{

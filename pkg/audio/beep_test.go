@@ -15,44 +15,44 @@
  *
  */
 
-package experimental
+package audio
 
 import (
 	"fmt"
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep/wav"
+	"github.com/golang/mock/gomock"
+	mockmock "github.com/oletizi/samplemgr/mocks/audio/mock"
 	"github.com/stretchr/testify/assert"
 	"log"
-	"os"
 	"testing"
 	"time"
 )
 
-func TestBeep(t *testing.T) {
-	f, err := os.Open("../../test/data/library/multi-level/hh.wav")
+func TestBeepPlayer_Close(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	streamer := mockmock.NewMockFakeStreamer(ctl)
+	player := &beepPlayer{streamer: streamer}
+
+	// expect player.CLose() to call streamer.Close()
+	streamer.EXPECT().Close()
+	err := player.Close()
+	assert.Nil(t, err)
+}
+
+func TestBeepPlayer_Play(t *testing.T) {
+	ctx, err := NewBeepContext()
 	assert.Nil(t, err)
 
-	streamer, format, err := wav.Decode(f)
+	player, err := ctx.PlayerFor("../../test/data/library/multi-level/hh.wav")
 	assert.Nil(t, err)
-	defer func(streamer beep.StreamSeekCloser) {
-		err := streamer.Close()
-		if err != nil {
-			log.Panic(err)
-		}
-	}(streamer)
-
-	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	if err != nil {
-		log.Println("Can't open speaker. Probably no sound card. Shouldn't be testing that in CI anyway.")
-		return
-	}
 
 	done := make(chan bool)
 
-	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+	player.Play(func() {
+		log.Println("Done playing.")
 		done <- true
-	})))
+	})
 	select {
 	case c := <-done:
 		fmt.Println("Done: ", c)
