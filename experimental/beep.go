@@ -15,7 +15,7 @@
  *
  */
 
-package main
+package experimental
 
 /*
 func main_experimental() {

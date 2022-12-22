@@ -21,6 +21,7 @@ import (
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/wav"
+	"github.com/oletizi/samplemgr/pkg/audio/bp"
 	"log"
 	"os"
 	"time"
@@ -28,7 +29,8 @@ import (
 
 type beepPlayer struct {
 	// indirection to support mocking
-	play              func(s ...beep.Streamer)
+	//play              func(s ...beep.Streamer)
+	spk               bp.Speaker
 	speakerSampleRate beep.SampleRate
 	streamer          beep.StreamSeekCloser
 	format            *beep.Format
@@ -43,7 +45,7 @@ func (b *beepPlayer) Loop(times int, completedCallback func()) error {
 	err := b.Stop() // pause current playback, if any
 	resampled := beep.Resample(4, b.format.SampleRate, b.speakerSampleRate, beep.Loop(times, b.streamer))
 	b.ctl = &beep.Ctrl{Streamer: beep.Seq(resampled, beep.Callback(completedCallback)), Paused: false}
-	b.play(b.ctl)
+	b.spk.Play(b.ctl)
 	return err
 }
 
@@ -51,10 +53,10 @@ func (b *beepPlayer) Stop() error {
 	if b.ctl == nil {
 		return nil
 	}
-	speaker.Lock()
+	b.spk.Lock()
 	b.ctl.Paused = true
 	err := b.streamer.Seek(0)
-	speaker.Unlock()
+	b.spk.Unlock()
 	b.ctl = nil
 	return err
 }
@@ -63,15 +65,15 @@ func (b *beepPlayer) Pause() {
 	if b.ctl == nil {
 		return
 	}
-	speaker.Lock()
+	b.spk.Lock()
 	b.ctl.Paused = !b.ctl.Paused
-	speaker.Unlock()
+	b.spk.Unlock()
 }
 
 func (b *beepPlayer) Close() error {
-	speaker.Lock()
+	b.spk.Lock()
 	err := b.streamer.Close()
-	speaker.Unlock()
+	b.spk.Unlock()
 	return err
 }
 
@@ -105,7 +107,7 @@ func (c *beepContext) PlayerFor(url string) (Player, error) {
 	}
 
 	return &beepPlayer{
-		play:              speaker.Play,
+		spk:               bp.NewSpeaker(),
 		speakerSampleRate: c.speakerSampleRate,
 		streamer:          streamer,
 		format:            &format,
