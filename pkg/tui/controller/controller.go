@@ -68,7 +68,7 @@ func (c *controller) sampleChosen(sample samplelib.Sample) {
 	// Play the sample
 	player, err := c.ac.PlayerFor(sample.Path())
 	if err == nil {
-		player.Play(func() {
+		err = player.Play(func() {
 			c.logger.Println("Done playing sample! Closing the player...")
 			err := player.Close()
 			c.eh.Handle(err)
