@@ -62,6 +62,6 @@ func TestBeepPlayer_Play(t *testing.T) {
 	}
 
 	fakeSpeaker.EXPECT().Play(gomock.Any())
-	player.Play(func() {})
-
+	err := player.Play(func() {})
+	assert.Nil(t, err)
 }

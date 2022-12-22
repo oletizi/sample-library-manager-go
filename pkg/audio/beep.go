@@ -32,15 +32,47 @@ type beepPlayer struct {
 	speakerSampleRate beep.SampleRate
 	streamer          beep.StreamSeekCloser
 	format            *beep.Format
+	ctl               *beep.Ctrl
 }
 
-func (b *beepPlayer) Play(completedCallback func()) {
-	resampled := beep.Resample(4, b.format.SampleRate, b.speakerSampleRate, b.streamer)
-	b.play(beep.Seq(resampled, beep.Callback(completedCallback)))
+func (b *beepPlayer) Play(completedCallback func()) error {
+	return b.Loop(1, completedCallback)
+}
+
+func (b *beepPlayer) Loop(times int, completedCallback func()) error {
+	err := b.Stop() // pause current playback, if any
+	resampled := beep.Resample(4, b.format.SampleRate, b.speakerSampleRate, beep.Loop(times, b.streamer))
+	b.ctl = &beep.Ctrl{Streamer: beep.Seq(resampled, beep.Callback(completedCallback)), Paused: false}
+	b.play(b.ctl)
+	return err
+}
+
+func (b *beepPlayer) Stop() error {
+	if b.ctl == nil {
+		return nil
+	}
+	speaker.Lock()
+	b.ctl.Paused = true
+	err := b.streamer.Seek(0)
+	speaker.Unlock()
+	b.ctl = nil
+	return err
+}
+
+func (b *beepPlayer) Pause() {
+	if b.ctl == nil {
+		return
+	}
+	speaker.Lock()
+	b.ctl.Paused = !b.ctl.Paused
+	speaker.Unlock()
 }
 
 func (b *beepPlayer) Close() error {
-	return b.streamer.Close()
+	speaker.Lock()
+	err := b.streamer.Close()
+	speaker.Unlock()
+	return err
 }
 
 type beepContext struct {

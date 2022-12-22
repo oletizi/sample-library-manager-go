@@ -13,7 +13,7 @@ get:
 gen: get
 	go generate ./...
 
-build: gen
+build: get
 	go build -o $(BIN) ./...
 
 test: gen

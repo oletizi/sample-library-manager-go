@@ -24,6 +24,9 @@ type Context interface {
 
 //go:generate mockgen -destination ../../mocks/audio/player.go . Player
 type Player interface {
-	Play(callBack func())
-	Close() error
+	Play(callBack func()) error            // Play sound.
+	Loop(times int, callback func()) error // Loop the sound `times` number of times. times = -1: loop forever.
+	Pause()                                // Pause or resume playback from previous pause.
+	Stop() error                           // Stop playback and reset playhead.
+	Close() error                          // Close the player and underlying resources.
 }
