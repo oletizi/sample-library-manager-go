@@ -46,12 +46,26 @@ type Entity interface {
 	Nullable
 	Name() string
 	Path() string
+	Equal(e Entity) bool
 }
 
 type entity struct {
 	nullable
 	name string
 	path string
+}
+
+func (e *entity) Equal(cmp Entity) bool {
+	if cmp == nil {
+		return false
+	}
+	if e.Null() {
+		return cmp.Null()
+	}
+	if cmp.Null() {
+		return e.Null()
+	}
+	return e.Path() == cmp.Path()
 }
 
 func newEntity(name string, path string) entity {
@@ -87,11 +101,11 @@ type sample struct {
 	entity
 }
 
-func newSample(name string, path string) Sample {
+func newSample(name string, path string) sample {
 	s := sample{
 		entity: newEntity(name, path),
 	}
-	return &s
+	return s
 }
 
 func nullSample() sample {

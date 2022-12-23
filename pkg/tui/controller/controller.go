@@ -23,6 +23,7 @@ import (
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"log"
+	"sync"
 )
 
 //go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
@@ -31,13 +32,16 @@ type Controller interface {
 }
 
 type controller struct {
-	ac     audio.Context
-	ds     samplelib.DataSource
-	eh     tui.ErrorHandler
-	nv     view.NodeView
-	iv     view.InfoView
-	lv     view.LogView
-	logger tui.Logger
+	mu            sync.Mutex
+	ac            audio.Context
+	ds            samplelib.DataSource
+	eh            tui.ErrorHandler
+	nv            view.NodeView
+	iv            view.InfoView
+	lv            view.LogView
+	logger        tui.Logger
+	currentPlayer audio.Player
+	currentSample samplelib.Sample
 }
 
 // UpdateNode tells the controller to update the UI for a new node
@@ -64,17 +68,56 @@ func (c *controller) nodeChosen(node samplelib.Node) {
 }
 
 // sampleChosen callback function for when a sample is chosen in the node view
-func (c *controller) sampleChosen(sample samplelib.Sample) {
-	// Play the sample
-	player, err := c.ac.PlayerFor(sample.Path())
-	if err == nil {
-		err = player.Play(func() {
-			c.logger.Println("Done playing sample! Closing the player...")
-			err := player.Close()
-			c.eh.Handle(err)
-		})
+func (c *controller) sampleChosen(newSample samplelib.Sample) {
+	var err error
+	currentSample, currentPlayer := c.getCurrentPlayer()
+
+	// stop current playback, if any
+	if currentPlayer != nil && currentPlayer.Playing() {
+		err = currentPlayer.Stop()
+		c.eh.Handle(err)
+		// If the current sample is the same as the newSample, don't play the sample again.
+		// This is the play/pause toggle condition.
+		if newSample.Equal(currentSample) {
+			return
+		}
 	}
-	c.eh.Handle(err)
+
+	// if the chosen newSample is different than the current newSample, create a new newPlayer
+	// and start playback
+	newPlayer, err := c.ac.PlayerFor(newSample.Path())
+	if err != nil {
+		// notest
+		c.eh.Handle(err)
+		return
+	}
+	// Play the chosen newSample
+	err = newPlayer.Play(func() {
+		c.logger.Println("Done playing newSample! Closing the newPlayer...")
+		err := newPlayer.Close()
+		c.eh.Handle(err)
+	})
+	if err != nil {
+		// notest
+		c.eh.Handle(err)
+		return
+	}
+	c.setCurrentPlayer(newSample, newPlayer)
+}
+
+func (c *controller) setCurrentPlayer(sample samplelib.Sample, player audio.Player) {
+	c.mu.Lock()
+	c.currentPlayer = player
+	c.currentSample = sample
+	c.mu.Unlock()
+}
+
+func (c *controller) getCurrentPlayer() (samplelib.Sample, audio.Player) {
+	c.mu.Lock()
+	p := c.currentPlayer
+	s := c.currentSample
+	c.mu.Unlock()
+	return s, p
 }
 
 func New(

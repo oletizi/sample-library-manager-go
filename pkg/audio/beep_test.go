@@ -25,6 +25,20 @@ import (
 	"testing"
 )
 
+func TestBeepPlayer_Playing(t *testing.T) {
+	player := &beepPlayer{}
+
+	playing := player.Playing()
+	assert.False(t, playing)
+
+	ctrl := &beep.Ctrl{}
+	ctrl.Paused = false
+	player.ctl = ctrl
+
+	playing = player.Playing()
+	assert.True(t, playing)
+}
+
 func TestBeepContext_PlayerFor(t *testing.T) {
 	ctx := &beepContext{}
 	player, err := ctx.PlayerFor("../../test/data/library/multi-level/hh.wav")

@@ -50,6 +50,43 @@ func TestNewSample(t *testing.T) {
 	assert.Equal(t, sample.Path(), path)
 }
 
+func TestEqual(t *testing.T) {
+	name1 := "name 1"
+	name2 := "name 2"
+	path1 := ""
+	path2 := "path 2"
+
+	sN1 := nullSample()
+	sNull1 := &sN1
+	assert.True(t, sNull1.Equal(sNull1))
+	sN2 := nullSample()
+	sNull2 := &sN2
+	assert.True(t, sNull1.Equal(sNull2))
+	assert.False(t, sNull1.Equal(nil))
+
+	s1 := newSample(name1, path1)
+	sample1 := &s1
+	assert.True(t, sample1.Equal(sample1))
+	assert.False(t, sample1.Equal(sNull1))
+
+	s2 := newSample(name1, path1)
+	sample2 := &s2
+	assert.True(t, sample2.Equal(sample2))
+
+	s3 := newSample(name2, path2)
+	sample3 := &s3
+	assert.False(t, sample1.Equal(sample3))
+
+	n1 := newNode(name1, path1, NullNode())
+	node1 := &n1
+	assert.True(t, node1.Equal(node1))
+
+	n2 := newNode(name2, path2, NullNode())
+	node2 := &n2
+	assert.False(t, node1.Equal(node2))
+
+}
+
 func TestNullConstructors(t *testing.T) {
 	assert.True(t, NullNullable().Null())
 	assert.True(t, NullEntity().Null())
