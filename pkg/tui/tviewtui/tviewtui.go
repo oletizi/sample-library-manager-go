@@ -72,6 +72,7 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	}
 	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView)
 	ctl.UpdateNode(rootNode)
+	ctl.StartPlayLoop()
 
 	return &tApp{
 		app:    app,
