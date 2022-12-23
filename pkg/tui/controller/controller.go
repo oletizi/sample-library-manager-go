@@ -32,7 +32,7 @@ type Controller interface {
 }
 
 type controller struct {
-	mu            sync.Mutex
+	mu            *sync.Mutex
 	ac            audio.Context
 	ds            samplelib.DataSource
 	eh            tui.ErrorHandler
@@ -129,6 +129,7 @@ func New(
 	logView view.LogView,
 ) Controller {
 	return &controller{
+		mu:     &sync.Mutex{},
 		ac:     ac,
 		ds:     ds,
 		eh:     eh,
