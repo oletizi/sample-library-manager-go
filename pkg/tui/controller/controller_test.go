@@ -23,6 +23,7 @@ import (
 	mocksamplelib "github.com/oletizi/samplemgr/mocks/samplelib"
 	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	mockview "github.com/oletizi/samplemgr/mocks/tui/view"
+	mock_util "github.com/oletizi/samplemgr/mocks/util"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -98,19 +99,29 @@ func TestChooseSameSample(t *testing.T) {
 	audioContext := mock_audio.NewMockContext(ctl)
 	audioPlayer := mock_audio.NewMockPlayer(ctl)
 	errorHandler := mocktui.NewMockErrorHandler(ctl)
+	playQueue := mock_util.NewMockQueue(ctl)
 	c := &controller{
+		playQueue:     playQueue,
+		logger:        log.Default(),
 		ac:            audioContext,
 		currentPlayer: audioPlayer,
 		eh:            errorHandler,
 	}
 
-	//path := "the path"
-	//sample.EXPECT().Path().Return(path)
+	playQueue.EXPECT().Add(sample)
+	c.sampleChosen(sample)
+
 	sample.EXPECT().Equal(gomock.Any()).Return(true)
 	audioPlayer.EXPECT().Playing().Return(true)
 	audioPlayer.EXPECT().Stop()
 	errorHandler.EXPECT().Handle(gomock.Any()).AnyTimes()
-	c.sampleChosen(sample)
+	// return sample after the first get
+	playQueue.EXPECT().Get().Return(sample, false)
+	playQueue.EXPECT().Done(sample)
+	// shutdown after the first get
+	playQueue.EXPECT().Get().Return(nil, true)
+	c.playLoop()
+
 }
 
 func TestController_chooseNodeAndSample(t *testing.T) {
@@ -123,55 +134,42 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	infoView := mockview.NewMockInfoView(ctl)
 	node := mocksamplelib.NewMockNode(ctl)
 	sample := mocksamplelib.NewMockSample(ctl)
-	audioPlayer := mock_audio.NewMockPlayer(ctl)
 	errorHandler := mocktui.NewMockErrorHandler(ctl)
+	playQueue := mock_util.NewMockQueue(ctl)
 
 	c := &controller{
-		eh:     errorHandler,
-		ac:     audioContext,
-		ds:     ds,
-		nv:     nodeView,
-		iv:     infoView,
-		logger: tui.NewLogger(log.Default()),
+		playQueue: playQueue,
+		eh:        errorHandler,
+		ac:        audioContext,
+		ds:        ds,
+		nv:        nodeView,
+		iv:        infoView,
+		logger:    tui.NewLogger(log.Default()),
 	}
 
 	errorHandler.EXPECT().Handle(gomock.Any()).AnyTimes()
 
+	// Test nodeChosen(Node)
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 	infoView.EXPECT().UpdateNode(ds, node)
 	node.EXPECT().Name().Return("node name").AnyTimes()
 	c.nodeChosen(node)
 
-	sampleUrl := "the sample url"
-
-	sample.EXPECT().Path().Return(sampleUrl)
-	audioContext.EXPECT().PlayerFor(sampleUrl).Return(audioPlayer, nil)
-	// XXX: Not sure yet how to match function parameters
-	matcher := &callbackMatcher{}
-	// ensure the audio currentPlayer is actually played
-	audioPlayer.EXPECT().Play(matcher)
-	log.Println("About to call c.sampleChosen(sample)...")
+	// Test sampleChosen(Sample)
+	playQueue.EXPECT().Add(sample)
 	c.sampleChosen(sample)
 
-	// get the expected callback to Play(func())
-	callback := matcher.args[0].(func())
-
-	// ensure the callback to call close on the audio currentPlayer (which should close any open resources like files)
-	audioPlayer.EXPECT().Close()
-
-	// invoke the callback to test its behavior
-	callback()
-}
-
-func (f *callbackMatcher) Matches(x interface{}) bool {
-	f.args = append(f.args, x)
-	return true
-}
-
-func (f *callbackMatcher) String() string {
-	return "Matches a callback function and stores it so you can call it later to cover it."
-}
-
-type callbackMatcher struct {
-	args []interface{}
+	// test play loop
+	audioPlayer := mock_audio.NewMockPlayer(ctl)
+	samplePath := "sample path"
+	sample.EXPECT().Path().MinTimes(1).Return(samplePath)
+	// return the sample to play the first time through the play loop
+	playQueue.EXPECT().Get().Return(sample, false)
+	playQueue.EXPECT().Done(sample)
+	// return shutdown the next time through the loop
+	playQueue.EXPECT().Get().Return(nil, true)
+	audioContext.EXPECT().PlayerFor(samplePath).Return(audioPlayer, nil)
+	audioPlayer.EXPECT().Play(gomock.Any())
+	log.Println("About to call playLoop...")
+	c.playLoop()
 }
