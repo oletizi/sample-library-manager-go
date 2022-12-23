@@ -28,13 +28,15 @@ import (
 )
 
 type beepPlayer struct {
-	// indirection to support mocking
-	//play              func(s ...beep.Streamer)
 	spk               bp.Speaker
 	speakerSampleRate beep.SampleRate
 	streamer          beep.StreamSeekCloser
 	format            *beep.Format
 	ctl               *beep.Ctrl
+}
+
+func (b *beepPlayer) Playing() bool {
+	return b.ctl != nil && !b.ctl.Paused
 }
 
 func (b *beepPlayer) Play(completedCallback func()) error {

@@ -70,7 +70,7 @@ func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
 			// - be defined publicly somewhere
 			if slices.Contains([]string{".wav", ".aif", ".aiff", ".mp3", ".m4a", ".flac"}, path.Ext(item.Name())) {
 				sample := newSample(item.Name(), path.Join(node.Path(), item.Name()))
-				samples = append(samples, sample)
+				samples = append(samples, &sample)
 			}
 		}
 	}

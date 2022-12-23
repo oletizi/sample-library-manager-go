@@ -90,6 +90,29 @@ func TestController_selectNodeAndSample(t *testing.T) {
 	c.sampleSelected(sample)
 }
 
+func TestChooseSameSample(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	sample := mocksamplelib.NewMockSample(ctl)
+	audioContext := mock_audio.NewMockContext(ctl)
+	audioPlayer := mock_audio.NewMockPlayer(ctl)
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
+	c := &controller{
+		ac:            audioContext,
+		currentPlayer: audioPlayer,
+		eh:            errorHandler,
+	}
+
+	//path := "the path"
+	//sample.EXPECT().Path().Return(path)
+	sample.EXPECT().Equal(gomock.Any()).Return(true)
+	audioPlayer.EXPECT().Playing().Return(true)
+	audioPlayer.EXPECT().Stop()
+	errorHandler.EXPECT().Handle(gomock.Any()).AnyTimes()
+	c.sampleChosen(sample)
+}
+
 func TestController_chooseNodeAndSample(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
@@ -112,34 +135,29 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 		logger: tui.NewLogger(log.Default()),
 	}
 
+	errorHandler.EXPECT().Handle(gomock.Any()).AnyTimes()
+
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 	infoView.EXPECT().UpdateNode(ds, node)
 	node.EXPECT().Name().Return("node name").AnyTimes()
 	c.nodeChosen(node)
 
-	//infoView.EXPECT().UpdateSample(ds, sample)
 	sampleUrl := "the sample url"
 
 	sample.EXPECT().Path().Return(sampleUrl)
 	audioContext.EXPECT().PlayerFor(sampleUrl).Return(audioPlayer, nil)
 	// XXX: Not sure yet how to match function parameters
 	matcher := &callbackMatcher{}
-	// ensure the audio player is actually played
+	// ensure the audio currentPlayer is actually played
 	audioPlayer.EXPECT().Play(matcher)
-	// ensure the error handler is called (with nil)
-	errorHandler.EXPECT().Handle(gomock.Nil())
 	log.Println("About to call c.sampleChosen(sample)...")
 	c.sampleChosen(sample)
 
 	// get the expected callback to Play(func())
 	callback := matcher.args[0].(func())
 
-	// ensure the callback to call close on the audio player (which should close any open resources like files)
+	// ensure the callback to call close on the audio currentPlayer (which should close any open resources like files)
 	audioPlayer.EXPECT().Close()
-
-	// ensure the callback passes the error return value from Player.Close() to be sent to the error handler
-	// (and that the error is nil)
-	errorHandler.EXPECT().Handle(gomock.Nil())
 
 	// invoke the callback to test its behavior
 	callback()
