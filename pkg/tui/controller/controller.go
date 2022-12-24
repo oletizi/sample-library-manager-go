@@ -22,6 +22,7 @@ import (
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"k8s.io/client-go/util/workqueue"
 	"log"
 )
@@ -40,7 +41,7 @@ type controller struct {
 	nv            view.NodeView
 	iv            view.InfoView
 	lv            view.LogView
-	logger        tui.Logger
+	logger        util.Logger
 	currentPlayer audio.Player
 	currentSample samplelib.Sample
 }
@@ -62,13 +63,13 @@ func (c *controller) playLoop() {
 		// stop current playback, if any
 		if c.currentPlayer != nil && c.currentPlayer.Playing() {
 			c.logger.Println("Current player is playing, stopping!")
-			err = c.currentPlayer.Stop()
+			c.currentPlayer.Stop()
 			c.logger.Println("Current player stopped.")
 			c.eh.Handle(err)
 			// If the current sample is the same as the newSample, don't play the sample again.
 			// This is the play/pause toggle condition.
 			if newSample.Equal(c.currentSample) {
-				c.logger.Println("Was already playing chosen sample. Break.")
+				c.logger.Println("Was already playing chosen sample. Continue.")
 				continue
 			}
 		}
@@ -84,12 +85,13 @@ func (c *controller) playLoop() {
 		}
 		// Play the chosen newSample
 		c.logger.Println("Calling play...")
-		err = newPlayer.Play(func() {
+		callback := func() {
 			// notest
 			c.logger.Println("Done playing newSample! Closing the newPlayer...")
-			err := newPlayer.Close()
+			newPlayer.Close()
 			c.eh.Handle(err)
-		})
+		}
+		newPlayer.Play(&callback)
 		c.logger.Println("Done calling play.")
 		if err != nil {
 			// notest
@@ -105,7 +107,6 @@ func (c *controller) playLoop() {
 
 // UpdateNode tells the controller to update the UI for a new node
 func (c *controller) UpdateNode(node samplelib.Node) {
-	c.logger.Print("Calling UpdateNode on node: " + node.Name())
 	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
 	c.iv.UpdateNode(c.ds, node)
 }
@@ -127,7 +128,6 @@ func (c *controller) sampleSelected(sample samplelib.Sample) {
 
 // nodeChosen callback function for when a node is chosen in the node view
 func (c *controller) nodeChosen(node samplelib.Node) {
-	c.logger.Print("In controller nodeChosen: " + node.Name())
 	c.UpdateNode(node)
 }
 
