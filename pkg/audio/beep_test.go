@@ -24,6 +24,7 @@ import (
 	mockbp "github.com/oletizi/samplemgr/mocks/audio/bp"
 	mockutil "github.com/oletizi/samplemgr/mocks/util"
 	"github.com/stretchr/testify/assert"
+	"log"
 	"testing"
 )
 
@@ -91,4 +92,74 @@ func TestTransportOperation(t *testing.T) {
 	assert.NotNil(t, operation.timestamp)
 	fmt.Printf("Timestampe: %s\n", operation.timestamp)
 	fmt.Printf("Timestampe: %s\n", operation.timestamp)
+}
+
+func TestControlLoop(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	speaker := mockbp.NewMockSpeaker(ctl)
+	controlQueue := mockutil.NewMockQueue(ctl)
+	streamer := mockbp.NewMockStreamer(ctl)
+	beepCtl := beep.Ctrl{Streamer: streamer, Paused: false}
+	player := &beepPlayer{
+		logger:            log.Default(),
+		spk:               speaker,
+		controlQueue:      controlQueue,
+		streamer:          streamer,
+		ctl:               &beepCtl,
+		format:            &beep.Format{SampleRate: 44100, NumChannels: 2, Precision: 4},
+		speakerSampleRate: 44100,
+	}
+	callback := func() {}
+	// test loop
+	loopOp := newTransportOperation(doLoop, 1, &callback)
+	controlQueue.EXPECT().Get().Return(loopOp, false)
+	controlQueue.EXPECT().Done(loopOp)
+	speaker.EXPECT().Lock()
+	streamer.EXPECT().Seek(0)
+	speaker.EXPECT().Unlock()
+	speaker.EXPECT().Play(gomock.Any())
+	// shut down the queue after first get
+	controlQueue.EXPECT().Get().Return(nil, true)
+	player.controlLoop()
+
+	// test pause
+	pauseOp := newTransportOperation(doPause, 0, nil)
+	controlQueue.EXPECT().Get().Return(pauseOp, false)
+	controlQueue.EXPECT().Done(pauseOp)
+	speaker.EXPECT().Lock()
+	speaker.EXPECT().Unlock()
+	// shut down the queue after first get
+	controlQueue.EXPECT().Get().Return(nil, true)
+	player.controlLoop()
+
+	// test stop
+	stopOp := newTransportOperation(doStop, 0, nil)
+	controlQueue.EXPECT().Get().Return(stopOp, false)
+	controlQueue.EXPECT().Done(stopOp)
+	speaker.EXPECT().Lock()
+	streamer.EXPECT().Seek(0)
+	speaker.EXPECT().Unlock()
+	// shut down the queue after first get
+	controlQueue.EXPECT().Get().Return(nil, true)
+	player.controlLoop()
+
+	// test close
+	closeOp := newTransportOperation(doClose, 0, nil)
+	controlQueue.EXPECT().Get().Return(closeOp, false)
+	controlQueue.EXPECT().Done(closeOp)
+	controlQueue.EXPECT().ShutDown()
+	speaker.EXPECT().Lock()
+	speaker.EXPECT().Unlock()
+	streamer.EXPECT().Close()
+
+	// shut down the queue after first get
+	controlQueue.EXPECT().Get().Return(nil, true)
+	player.controlLoop()
+
+	// test queue shutdown
+	controlQueue.EXPECT().Get().Return(nil, true)
+	player.controlLoop()
+
 }

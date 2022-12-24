@@ -110,6 +110,7 @@ func (b *beepPlayer) controlLoop() {
 			// unlock the speaker.
 			b.spk.Unlock()
 			if err != nil {
+				// notest
 				log.Print(err)
 			}
 		}
