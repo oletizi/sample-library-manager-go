@@ -23,6 +23,7 @@ import (
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/controller"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/rivo/tview"
 	"log"
 )
@@ -44,7 +45,7 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	logView.textView.SetBorder(true)
 
 	l := log.New(logView, "", 0)
-	logger := tui.NewLogger(l)
+	logger := util.NewLogger(l)
 	errorHandler := tui.NewErrorHandler(logger)
 
 	display, err := view.NewDisplay(logger, errorHandler)
@@ -66,7 +67,7 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	rootNode, err := ds.RootNode()
 	errorHandler.Handle(err)
 
-	audioContext, err := audio.NewBeepContext()
+	audioContext, err := audio.NewBeepContext(logger)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +84,7 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 func newTInfoView(
 	textView *tview.TextView,
 	display view.Display,
-	logger tui.Logger,
+	logger util.Logger,
 	handler tui.ErrorHandler,
 ) *tInfoView {
 	textView.SetBorder(true)

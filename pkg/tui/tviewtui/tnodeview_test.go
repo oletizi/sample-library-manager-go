@@ -22,6 +22,7 @@ import (
 	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
 	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
 	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
+	mock_util "github.com/oletizi/samplemgr/mocks/util"
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ func TestTNodeView_Methods(t *testing.T) {
 
 	list := tview.NewList()
 	display := mock_view.NewMockDisplay(ctl)
-	logger := mock_tui.NewMockLogger(ctl)
+	logger := mock_util.NewMockLogger(ctl)
 	eh := mock_tui.NewMockErrorHandler(ctl)
 	nv := newTNodeView(list, display, logger, eh)
 

@@ -21,12 +21,13 @@ import (
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/rivo/tview"
 )
 
 type tInfoView struct {
 	textView *tview.TextView
-	logger   tui.Logger
+	logger   util.Logger
 	eh       tui.ErrorHandler
 	display  view.Display
 }

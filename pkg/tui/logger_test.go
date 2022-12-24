@@ -19,6 +19,7 @@ package tui
 
 import (
 	"bytes"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -27,7 +28,7 @@ import (
 func TestLogger_Methods(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	v := "v"
-	logger := NewLogger(log.New(buf, "", 0))
+	logger := util.NewLogger(log.New(buf, "", 0))
 	logger.Print(v)
 	assert.Equal(t, v+"\n", buf.String())
 

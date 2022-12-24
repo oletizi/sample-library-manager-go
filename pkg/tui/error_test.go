@@ -20,7 +20,8 @@ package tui
 import (
 	"errors"
 	"github.com/golang/mock/gomock"
-	mocktui "github.com/oletizi/samplemgr/mocks/tui"
+	mock_util "github.com/oletizi/samplemgr/mocks/util"
+
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestErrorHandler(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	logger := mocktui.NewMockLogger(ctl)
+	logger := mock_util.NewMockLogger(ctl)
 
 	handler := NewErrorHandler(logger)
 	assert.NotNil(t, handler)

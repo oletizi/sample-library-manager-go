@@ -15,11 +15,11 @@
  *
  */
 
-package tui
+package util
 
 import "log"
 
-//go:generate mockgen -destination=../../mocks/tui/logger.go . Logger
+//go:generate mockgen -destination=../../mocks/util/logger.go . Logger
 type Logger interface {
 	Print(v ...any)
 	Println(v ...any)

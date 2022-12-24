@@ -18,9 +18,11 @@
 package audio
 
 import (
+	"fmt"
 	"github.com/faiface/beep"
 	"github.com/golang/mock/gomock"
 	mockbp "github.com/oletizi/samplemgr/mocks/audio/bp"
+	mockutil "github.com/oletizi/samplemgr/mocks/util"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -50,73 +52,43 @@ func TestBeepPlayer_Close(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
+	controlQueue := mockutil.NewMockQueue(ctl)
 	streamer := mockbp.NewMockStreamer(ctl)
 	speaker := mockbp.NewMockSpeaker(ctl)
 	player := &beepPlayer{
-		spk:      speaker,
-		streamer: streamer,
+		controlQueue: controlQueue,
+		spk:          speaker,
+		streamer:     streamer,
 	}
 
 	// expect player.CLose() to call streamer.Close()
-	speaker.EXPECT().Lock()
-	streamer.EXPECT().Close()
-	speaker.EXPECT().Unlock()
-
-	err := player.Close()
-	assert.Nil(t, err)
+	// XXX: Can't figure out how to get an appropriate matcher.
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Close()
 }
 
 func TestBeepPlayer_Play(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
-
+	controlQueue := mockutil.NewMockQueue(ctl)
 	streamer := mockbp.NewMockStreamer(ctl)
 	speaker := mockbp.NewMockSpeaker(ctl)
 	player := &beepPlayer{
+		controlQueue:      controlQueue,
 		spk:               speaker,
 		speakerSampleRate: 44100,
 		streamer:          streamer,
 		format:            &beep.Format{SampleRate: 44100, NumChannels: 2, Precision: 4},
 	}
 
-	speaker.EXPECT().Play(gomock.Any())
-	err := player.Play(func() {})
-	assert.Nil(t, err)
+	callback := func() {}
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Play(&callback)
 }
 
-func TestBeepPlayer_Transport(t *testing.T) {
-	ctl := gomock.NewController(t)
-	defer ctl.Finish()
-
-	speaker := mockbp.NewMockSpeaker(ctl)
-	streamer := mockbp.NewMockStreamer(ctl)
-	player := &beepPlayer{
-		spk:               speaker,
-		speakerSampleRate: 44100,
-		streamer:          streamer,
-		format:            &beep.Format{SampleRate: 44100, NumChannels: 2, Precision: 4},
-	}
-	// If Play() or Loop() haven't been called yet, pause should be a nop
-	player.Pause()
-
-	speaker.EXPECT().Play(gomock.Any())
-	err := player.Play(func() {})
-	assert.Nil(t, err)
-
-	speaker.EXPECT().Lock()
-	speaker.EXPECT().Unlock()
-	player.Pause()
-
-	speaker.EXPECT().Lock()
-	streamer.EXPECT().Seek(0)
-	speaker.EXPECT().Unlock()
-	speaker.EXPECT().Play(gomock.Any())
-	err = player.Loop(1, func() {})
-	assert.Nil(t, err)
-
-	speaker.EXPECT().Lock()
-	streamer.EXPECT().Seek(0)
-	speaker.EXPECT().Unlock()
-	err = player.Stop()
-	assert.Nil(t, err)
+func TestTransportOperation(t *testing.T) {
+	operation := transportOperation{op: doStop}
+	assert.NotNil(t, operation.timestamp)
+	fmt.Printf("Timestampe: %s\n", operation.timestamp)
+	fmt.Printf("Timestampe: %s\n", operation.timestamp)
 }

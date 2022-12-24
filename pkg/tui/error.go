@@ -17,13 +17,15 @@
 
 package tui
 
+import "github.com/oletizi/samplemgr/pkg/util"
+
 //go:generate mockgen -destination=../../mocks/tui/error.go . ErrorHandler
 type ErrorHandler interface {
 	Handle(error)
 }
 
 type errorHandler struct {
-	logger Logger
+	logger util.Logger
 }
 
 func (e *errorHandler) Handle(err error) {
@@ -32,6 +34,6 @@ func (e *errorHandler) Handle(err error) {
 	}
 }
 
-func NewErrorHandler(logger Logger) ErrorHandler {
+func NewErrorHandler(logger util.Logger) ErrorHandler {
 	return &errorHandler{logger}
 }

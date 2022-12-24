@@ -21,6 +21,7 @@ import (
 	"github.com/oletizi/samplemgr/pkg/samplelib"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/rivo/tview"
 )
 
@@ -28,7 +29,7 @@ type tNodeView struct {
 	list    *tview.List
 	display view.Display
 	eh      tui.ErrorHandler
-	logger  tui.Logger
+	logger  util.Logger
 }
 
 // newTNodeView Constructor for tNodeView. Discourages forgetting to set properties. Wires up listeners.
@@ -36,7 +37,7 @@ type tNodeView struct {
 func newTNodeView(
 	list *tview.List,
 	display view.Display,
-	logger tui.Logger,
+	logger util.Logger,
 	handler tui.ErrorHandler,
 ) *tNodeView {
 	list.ShowSecondaryText(false)
@@ -68,7 +69,6 @@ func (t *tNodeView) UpdateNode(
 		nodes = append(nodes, parent)
 		t.list.AddItem(text, "", 0, func() {
 			// notest
-			t.logger.Print("Parent node chosen: " + parent.Name())
 			nodeChosen(parent)
 		})
 	}
@@ -83,7 +83,6 @@ func (t *tNodeView) UpdateNode(
 		thisChild := child
 		t.list.AddItem(text, "", 0, func() {
 			// notest
-			t.logger.Print("Child node chosen: " + thisChild.Name())
 			nodeChosen(thisChild)
 		})
 	}
@@ -96,7 +95,6 @@ func (t *tNodeView) UpdateNode(
 		thisSample := sample
 		t.list.AddItem(text, "", 0, func() {
 			// notest
-			t.logger.Print("Sample chosen: " + thisSample.Name())
 			sampleChosen(thisSample)
 		})
 	}
@@ -104,7 +102,6 @@ func (t *tNodeView) UpdateNode(
 	// set the callback function for when a new list element is selected (e.g., w/ arrow keys)
 	t.list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 		// notest
-		t.logger.Printf("Node view changed: index: %d", index)
 		if index < len(nodes) {
 			nodeSelected(nodes[index])
 		} else {
