@@ -76,6 +76,18 @@ func (b *beepPlayer) Loop(times int, completedCallback *func()) {
 	b.controlQueue.Add(newTransportOperation(doLoop, times, completedCallback))
 }
 
+func (b *beepPlayer) Stop() {
+	b.controlQueue.Add(newTransportOperation(doStop, 0, nil))
+}
+
+func (b *beepPlayer) Pause() {
+	b.controlQueue.Add(newTransportOperation(doPause, 0, nil))
+}
+
+func (b *beepPlayer) Close() {
+	b.controlQueue.Add(newTransportOperation(doClose, 0, nil))
+}
+
 func (b *beepPlayer) controlLoop() {
 	for {
 		item, shutdown := b.controlQueue.Get()
@@ -120,6 +132,7 @@ func (b *beepPlayer) controlLoop() {
 // stop is not thread safe. Should only be called inside the control loop.
 func (b *beepPlayer) stop() {
 	if b.ctl == nil {
+		// notest
 		return
 	}
 	// lock the speaker while we fiddle with the control & streamer
@@ -132,20 +145,9 @@ func (b *beepPlayer) stop() {
 	b.spk.Unlock()
 
 	if err != nil {
+		// notest
 		log.Panic(err)
 	}
-}
-
-func (b *beepPlayer) Stop() {
-	b.controlQueue.Add(newTransportOperation(doStop, 0, nil))
-}
-
-func (b *beepPlayer) Pause() {
-	b.controlQueue.Add(newTransportOperation(doPause, 0, nil))
-}
-
-func (b *beepPlayer) Close() {
-	b.controlQueue.Add(newTransportOperation(doClose, 0, nil))
 }
 
 type beepContext struct {

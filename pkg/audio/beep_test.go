@@ -49,26 +49,7 @@ func TestBeepContext_PlayerFor(t *testing.T) {
 	assert.NotNil(t, player)
 }
 
-func TestBeepPlayer_Close(t *testing.T) {
-	ctl := gomock.NewController(t)
-	defer ctl.Finish()
-
-	controlQueue := mockutil.NewMockQueue(ctl)
-	streamer := mockbp.NewMockStreamer(ctl)
-	speaker := mockbp.NewMockSpeaker(ctl)
-	player := &beepPlayer{
-		controlQueue: controlQueue,
-		spk:          speaker,
-		streamer:     streamer,
-	}
-
-	// expect player.CLose() to call streamer.Close()
-	// XXX: Can't figure out how to get an appropriate matcher.
-	controlQueue.EXPECT().Add(gomock.Any())
-	player.Close()
-}
-
-func TestBeepPlayer_Play(t *testing.T) {
+func TestBeepPlayer_InterfaceFunctions(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 	controlQueue := mockutil.NewMockQueue(ctl)
@@ -83,8 +64,22 @@ func TestBeepPlayer_Play(t *testing.T) {
 	}
 
 	callback := func() {}
+	// XXX: Can't figure out how to get arg matchers to work right
 	controlQueue.EXPECT().Add(gomock.Any())
 	player.Play(&callback)
+
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Loop(1, &callback)
+
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Pause()
+
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Stop()
+
+	controlQueue.EXPECT().Add(gomock.Any())
+	player.Close()
+
 }
 
 func TestTransportOperation(t *testing.T) {
