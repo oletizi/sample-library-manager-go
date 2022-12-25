@@ -5,9 +5,10 @@ go 1.18
 require (
 	github.com/faiface/beep v1.1.0
 	github.com/golang/mock v1.6.0
+	github.com/h2non/filetype v1.1.3
 	github.com/rivo/tview v0.0.0-20221211160934-55d1ca9d3392
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a
+	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338
 	gopkg.in/vansante/go-ffprobe.v2 v2.1.1
 	k8s.io/client-go v0.26.0
 )
@@ -24,6 +25,7 @@ require (
 	github.com/hajimehoshi/oto v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mutablelogic/go-media v1.5.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect

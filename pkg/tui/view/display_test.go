@@ -62,10 +62,14 @@ func TestSampleDisplay(t *testing.T) {
 	keywords := []string{"keyword1", "keyword2"}
 	sampleMeta.EXPECT().Keywords().Return(keywords)
 	sampleMeta.EXPECT().AudioStream().MinTimes(1).Return(audioStream)
+	sampleMeta.EXPECT().FileType()
 	sampleRate := "100"
 	bitDepth := 8
 	audioStream.EXPECT().SampleRate().Return(sampleRate)
 	audioStream.EXPECT().BitDepth().Return(bitDepth)
+	audioStream.EXPECT().ChannelCount()
+	audioStream.EXPECT().Duration()
+	audioStream.EXPECT().CodecName()
 	// do the thing!
 	display, err := NewDisplay(log.Default(), errorHandler)
 
