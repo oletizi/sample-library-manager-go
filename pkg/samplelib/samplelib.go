@@ -17,6 +17,8 @@
 
 package samplelib
 
+import "github.com/h2non/filetype/types"
+
 type Nullable interface {
 	Null() bool
 }
@@ -181,9 +183,14 @@ func (m *meta) Keywords() []string {
 	return m.keywords
 }
 
+type FileType struct {
+	types.Type
+}
+
 //go:generate mockgen -destination=../../mocks/samplelib/samplemeta.go . SampleMeta
 type SampleMeta interface {
 	Meta
+	FileType() FileType
 	AudioStream() AudioStream
 }
 
@@ -191,16 +198,21 @@ type sampleMeta struct {
 	meta
 	sample      Sample
 	audioStream AudioStream
+	filetype    FileType
 }
 
+func (s *sampleMeta) FileType() FileType {
+	return s.filetype
+}
 func (s *sampleMeta) AudioStream() AudioStream {
 	return s.audioStream
 }
 
-func newSampleMeta(sample Sample, description string, keywords []string, stream AudioStream) sampleMeta {
+func newSampleMeta(sample Sample, description string, keywords []string, filetype types.Type, stream AudioStream) sampleMeta {
 	return sampleMeta{
 		meta:        newMeta(sample.Name(), sample.Path(), description, keywords),
 		sample:      sample,
+		filetype:    FileType{filetype},
 		audioStream: stream,
 	}
 }
@@ -219,6 +231,10 @@ type AudioStream interface {
 	Nullable
 	SampleRate() string
 	BitDepth() int
+	ChannelCount() int
+	CodecName() string
+	CodecType() string
+	Duration() string
 }
 
 func (s *audioStream) SampleRate() string {
@@ -231,17 +247,36 @@ func (s *audioStream) BitDepth() int {
 
 type audioStream struct {
 	nullable
-	sample     Sample
-	sampleRate string
-	bitDepth   int
+	sample       Sample
+	sampleRate   string
+	bitDepth     int
+	channelCount int
+	codecName    string
+	codecType    string
+	duration     string
 }
 
-func newAudioStream(sample Sample, sampleRate string, bitDepth int) audioStream {
+func (s *audioStream) ChannelCount() int {
+	return s.channelCount
+}
+
+func (s *audioStream) CodecName() string {
+	return s.codecName
+}
+
+func (s *audioStream) CodecType() string {
+	return s.codecType
+}
+
+func (s *audioStream) Duration() string {
+	return s.duration
+}
+
+// newAudioStream internal constructor for audioStream struct
+func newAudioStream(sample Sample) audioStream {
 	return audioStream{
-		nullable:   newNullable(),
-		sample:     sample,
-		sampleRate: sampleRate,
-		bitDepth:   bitDepth,
+		nullable: newNullable(),
+		sample:   sample,
 	}
 }
 func nullAudioStream() audioStream {

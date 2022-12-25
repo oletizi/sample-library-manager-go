@@ -20,6 +20,8 @@ package samplelib
 import (
 	"context"
 	"encoding/json"
+	"github.com/h2non/filetype"
+	"github.com/h2non/filetype/types"
 	"golang.org/x/exp/slices"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"log"
@@ -76,12 +78,43 @@ func (f *fsDataSource) SamplesOf(node Node) ([]Sample, error) {
 	}
 	return samples, nil
 }
-func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
-	metaPath := path.Join(path.Dir(sample.Path()), ".meta", sample.Name()+".json")
 
-	meta := newSampleMeta(sample, "", []string{}, NullAudioStream())
+func readFileType(path string) types.Type {
+	unknown := types.NewType("unknown", "unknown")
+	file, err := os.Open(path)
+	if err != nil {
+		// notest
+		return unknown
+	}
+	// read enough of the file to get the header
+	head := make([]byte, 1024)
+	_, err = file.Read(head)
+	if err != nil {
+		// notest
+		return unknown
+	}
+	match, err := filetype.Match(head)
+	if err != nil {
+		// notest
+		return unknown
+	}
+	return match
+}
+
+func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
+	fileType := readFileType(sample.Path())
+
+	meta := newSampleMeta(sample, "", []string{}, fileType, NullAudioStream())
+
+	// look for a metadata file for this sample
+	// IMPROVE?:
+	// - use a file hash instead of a name so files can be moved renamed without losing the mapping
+	//   between metadata and media file?
+	// - move the metadata directory to the top of the library (à la git) so files can be moved without
+	//   also moving their associated metadata file?
+	metaPath := path.Join(path.Dir(sample.Path()), ".meta", sample.Name()+".json")
 	if _, err := os.Stat(metaPath); err == nil {
-		// XXX: This sooooo verbose. There must be a better way to do this.
+		// XXX: This so verbose. There must be a better way to do this.
 		// Need to declare this temporary struct b/c the json.Unmarshal function can only write to
 		// public fields; the meta struct only has private fields.
 		data := struct {
@@ -103,9 +136,14 @@ func (f *fsDataSource) MetaOf(sample Sample) (SampleMeta, error) {
 		log.Printf("Error getting audio data: %v", err)
 	} else {
 		stream := data.FirstAudioStream()
-
-		audioStream := newAudioStream(sample, stream.SampleRate, stream.BitsPerSample)
-		meta.audioStream = &audioStream
+		as := newAudioStream(sample)
+		as.sampleRate = stream.SampleRate
+		as.bitDepth = stream.BitsPerSample
+		as.channelCount = stream.Channels
+		as.codecName = stream.CodecLongName
+		as.codecType = stream.CodecType
+		as.duration = stream.Duration
+		meta.audioStream = &as
 	}
 	return &meta, nil
 }

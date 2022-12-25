@@ -72,6 +72,31 @@ func TestFileSystemDataSourceErrors(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestFsDataSource_SampleFileMeta(t *testing.T) {
+	source := NewFilesystemDataSource("../../test/data/library/one-level")
+	root, err := source.RootNode()
+	assert.Nil(t, err)
+	samples, err := source.SamplesOf(root)
+	assert.Nil(t, err)
+	for _, sample := range samples {
+		meta, err := source.MetaOf(sample)
+		fileType := meta.FileType()
+		as := meta.AudioStream()
+		assert.Nil(t, err)
+		log.Printf("Sample: %s", sample.Name())
+		log.Printf("  mime-type     : %v", fileType.MIME.Value)
+		log.Printf("  type          : %v", fileType.MIME.Type)
+		log.Printf("  sub-type      : %v", fileType.MIME.Subtype)
+		log.Printf("  extension     : %v", fileType.Extension)
+		log.Printf("  sample rate   : %v", as.SampleRate())
+		log.Printf("  bit depth     : %v", as.BitDepth())
+		log.Printf("  codec type    : %v", as.CodecType())
+		log.Printf("  codec name    : %v", as.CodecName())
+		log.Printf("  channel count : %v", as.ChannelCount())
+		log.Printf("  duration      : %v", as.Duration())
+	}
+}
+
 func TestFsDataSource_MetaOf(t *testing.T) {
 	source := NewFilesystemDataSource("../../test/data/library/multi-level")
 	root, err := source.RootNode()

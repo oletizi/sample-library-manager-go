@@ -66,15 +66,23 @@ func (d *display) DisplaySampleAsText(ds samplelib.DataSource, sample samplelib.
 	data := struct {
 		Name       string
 		Path       string
+		Type       string
 		SampleRate string
 		BitDepth   string
 		Keywords   string
+		Codec      string
+		Channels   string
+		Duration   string
 	}{
-		sample.Name(),
-		sample.Path(),
-		"unknown",
-		"unknown",
-		"",
+		Name:       sample.Name(),
+		Path:       sample.Path(),
+		Type:       "unknown",
+		SampleRate: "unknown",
+		BitDepth:   "unknown",
+		Keywords:   "",
+		Codec:      "unknown",
+		Channels:   "unknown",
+		Duration:   "unknown",
 	}
 	meta, err := ds.MetaOf(sample)
 	if err != nil {
@@ -82,8 +90,13 @@ func (d *display) DisplaySampleAsText(ds samplelib.DataSource, sample samplelib.
 		d.logger.Println(err)
 	} else {
 		data.Keywords = strings.Join(meta.Keywords(), ", ")
-		data.SampleRate = meta.AudioStream().SampleRate()
-		data.BitDepth = strconv.Itoa(meta.AudioStream().BitDepth())
+		data.Type = meta.FileType().MIME.Value
+		as := meta.AudioStream()
+		data.SampleRate = as.SampleRate()
+		data.BitDepth = strconv.Itoa(as.BitDepth())
+		data.Codec = as.CodecName()
+		data.Channels = strconv.Itoa(as.ChannelCount())
+		data.Duration = as.Duration()
 	}
 
 	return render(d.sampleTextTemplate, data, d.errorHandler)
