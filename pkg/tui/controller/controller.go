@@ -27,10 +27,35 @@ import (
 	"log"
 )
 
+type editContext struct {
+	start  func()
+	commit func() error
+	cancel func()
+}
+
+func newNullEditContext(logger util.Logger) editContext {
+	return editContext{
+		func() {
+			logger.Println("Null start edit.")
+		},
+		func() error {
+			logger.Println("Null commit edit.")
+			return nil
+		},
+		func() {
+			logger.Println("Null cancel edit.")
+		},
+	}
+}
+
 //go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
 type Controller interface {
 	UpdateNode(node samplelib.Node)
+	SetControlPanel(cp view.ControlPanel)
 	StartPlayLoop()
+	EditStart()
+	EditCommit()
+	EditCancel()
 }
 
 type controller struct {
@@ -42,8 +67,37 @@ type controller struct {
 	iv            view.InfoView
 	lv            view.LogView
 	logger        util.Logger
+	controlPanel  view.ControlPanel
 	currentPlayer audio.Player
 	currentSample samplelib.Sample
+	editContext   editContext
+}
+
+// UpdateNode tells the controller to update the UI for a new node
+func (c *controller) UpdateNode(node samplelib.Node) {
+	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
+	c.iv.UpdateNode(c.ds, node)
+}
+
+func (c *controller) SetControlPanel(controlPanel view.ControlPanel) {
+	c.controlPanel = controlPanel
+}
+
+func (c *controller) StartPlayLoop() {
+	// notest
+	go c.playLoop()
+}
+
+func (c *controller) EditStart() {
+	c.editContext.start()
+}
+
+func (c *controller) EditCommit() {
+	c.eh.Handle(c.editContext.commit())
+}
+
+func (c *controller) EditCancel() {
+	c.editContext.cancel()
 }
 
 func (c *controller) playLoop() {
@@ -105,24 +159,41 @@ func (c *controller) playLoop() {
 	}
 }
 
-// UpdateNode tells the controller to update the UI for a new node
-func (c *controller) UpdateNode(node samplelib.Node) {
-	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
-	c.iv.UpdateNode(c.ds, node)
-}
-
-func (c *controller) StartPlayLoop() {
-	// notest
-	go c.playLoop()
-}
-
 // nodeSelected callback function for when a node is selected in the node view
 func (c *controller) nodeSelected(node samplelib.Node) {
+	// set the edit context
+	c.editContext = editContext{
+		start: func() {
+			c.logger.Printf("Start edit on node: %v", node.Name())
+		},
+		commit: func() error {
+			c.logger.Printf("Commit edit on node: %v", node.Name())
+			return nil
+		},
+		cancel: func() {
+			c.logger.Println("Cancel edit on node: %v", node.Name())
+		},
+	}
+	// update the info view
 	c.iv.UpdateNode(c.ds, node)
 }
 
 // sampleSelected callback function for when a sample is selected in the node view
 func (c *controller) sampleSelected(sample samplelib.Sample) {
+	// set the edit context
+	c.editContext = editContext{
+		start: func() {
+			c.logger.Printf("Start edit on sample: %v", sample.Name())
+		},
+		commit: func() error {
+			c.logger.Printf("Commit edit on sample: %v", sample.Name())
+			return nil
+		},
+		cancel: func() {
+			c.logger.Printf("Cancel edit on sample: %v", sample.Name())
+		},
+	}
+	// update the info view
 	c.iv.UpdateSample(c.ds, sample)
 }
 
@@ -144,14 +215,18 @@ func New(
 	infoView view.InfoView,
 	logView view.LogView,
 ) Controller {
+	logger := log.New(logView, "", 0)
 	rv := &controller{
-		playQueue: workqueue.New(),
-		ac:        ac,
-		ds:        ds,
-		eh:        eh,
-		nv:        nodeView,
-		iv:        infoView,
-		lv:        logView,
-		logger:    log.New(logView, "", 0)}
+		playQueue:   workqueue.New(),
+		ac:          ac,
+		ds:          ds,
+		eh:          eh,
+		nv:          nodeView,
+		iv:          infoView,
+		lv:          logView,
+		logger:      logger,
+		editContext: newNullEditContext(logger),
+	}
+	nodeView.Focus()
 	return rv
 }
