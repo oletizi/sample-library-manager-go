@@ -64,6 +64,6 @@ type ControlPanel interface {
 
 type Control struct {
 	Label  string
-	Key    string
+	Keys   []string
 	Action func()
 }

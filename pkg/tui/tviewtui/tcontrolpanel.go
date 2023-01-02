@@ -21,15 +21,19 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/oletizi/samplemgr/pkg/tui/controller"
 	"github.com/oletizi/samplemgr/pkg/tui/view"
+	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/rivo/tview"
+	"strings"
 )
 
-// displayMargin the number of spaces between each control
-const displayMargin = 2
+// displayMargin the spaces between each control
+const displayMargin = "  "
 
 type controlPanel struct {
+	logger   util.Logger
 	ctl      controller.Controller
 	controls []view.Control
+	textView *tview.TextView
 	layout   *tview.Flex
 	app      *tview.Application
 }
@@ -38,7 +42,7 @@ func (c *controlPanel) EditControls() {
 	c.controls = []view.Control{
 		{
 			Label: "[::r]F1:[::-] Save",
-			Key:   "F1",
+			Keys:  []string{"F1"},
 			Action: func() {
 				c.ctl.EditCommit()
 				c.MainControls()
@@ -46,7 +50,7 @@ func (c *controlPanel) EditControls() {
 		},
 		{
 			Label: "[::r]F2:[::-] Cancel",
-			Key:   "F2",
+			Keys:  []string{"F2", "Esc"},
 			Action: func() {
 				c.ctl.EditCancel()
 				c.MainControls()
@@ -60,7 +64,7 @@ func (c *controlPanel) MainControls() {
 	c.controls = []view.Control{
 		{
 			Label: "[::r]F1:[::-] Edit",
-			Key:   "F1",
+			Keys:  []string{"F1"},
 			Action: func() {
 				c.ctl.EditStart()
 				c.EditControls()
@@ -71,31 +75,36 @@ func (c *controlPanel) MainControls() {
 }
 
 func (c *controlPanel) update() {
-	c.layout.Clear()
+	c.textView.Clear()
+	var frags []string
 	for _, control := range c.controls {
-		v := tview.NewTextView()
-		v.SetDynamicColors(true)
-		v.SetText(control.Label)
-		c.layout.AddItem(v, len(v.GetText(true))+displayMargin, 0, false)
+		frags = append(frags, control.Label)
 	}
-	// TODO: Figure out how to get the control panel flex layout to update
+	c.textView.SetText(strings.Join(frags, displayMargin))
 }
 
 func (c *controlPanel) inputCapture(event *tcell.EventKey) *tcell.EventKey {
 	for _, control := range c.controls {
-		if control.Key == event.Name() {
-			control.Action()
-			break
+		for _, key := range control.Keys {
+			if key == event.Name() {
+				control.Action()
+				break
+			}
 		}
 	}
 	return event
 }
 
-func newControlPanel(app *tview.Application, layout *tview.Flex, ctl controller.Controller) view.ControlPanel {
+func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.Flex, ctl controller.Controller) view.ControlPanel {
+	textView := tview.NewTextView()
+	textView.SetDynamicColors(true)
+	layout.AddItem(textView, 0, 1, false)
 	cp := controlPanel{
-		app:    app,
-		layout: layout,
-		ctl:    ctl,
+		logger:   logger,
+		app:      app,
+		layout:   layout,
+		textView: textView,
+		ctl:      ctl,
 	}
 	cp.MainControls()
 	app.SetInputCapture(cp.inputCapture)

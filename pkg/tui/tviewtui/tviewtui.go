@@ -84,7 +84,7 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	}
 	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView)
 
-	ctl.SetControlPanel(newControlPanel(app, controlPanelLayout, ctl))
+	ctl.SetControlPanel(newControlPanel(logger, app, controlPanelLayout, ctl))
 	ctl.UpdateNode(rootNode)
 	ctl.StartPlayLoop()
 
