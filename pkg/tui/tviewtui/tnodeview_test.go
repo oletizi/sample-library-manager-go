@@ -32,12 +32,12 @@ import (
 func TestTNodeView_Methods(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
-
+	app := tview.NewApplication()
 	list := tview.NewList()
 	display := mock_view.NewMockDisplay(ctl)
 	logger := mock_util.NewMockLogger(ctl)
 	eh := mock_tui.NewMockErrorHandler(ctl)
-	nv := newTNodeView(list, display, logger, eh)
+	nv := newTNodeView(app, list, display, logger, eh)
 
 	assert.NotNil(t, nv)
 	assert.Equal(t, list, nv.list)

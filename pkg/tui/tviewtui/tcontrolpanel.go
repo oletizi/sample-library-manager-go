@@ -38,14 +38,14 @@ type controlPanel struct {
 	app      *tview.Application
 }
 
-func (c *controlPanel) EditControls() {
+func (c *controlPanel) ShowEditControls() {
 	c.controls = []view.Control{
 		{
 			Label: "[::r]F1:[::-] Save",
 			Keys:  []string{"F1"},
 			Action: func() {
 				c.ctl.EditCommit()
-				c.MainControls()
+				c.ShowMainControls()
 			},
 		},
 		{
@@ -53,27 +53,28 @@ func (c *controlPanel) EditControls() {
 			Keys:  []string{"F2", "Esc"},
 			Action: func() {
 				c.ctl.EditCancel()
-				c.MainControls()
+				c.ShowMainControls()
 			},
 		},
 	}
 	c.update()
 }
 
-func (c *controlPanel) MainControls() {
+func (c *controlPanel) ShowMainControls() {
 	c.controls = []view.Control{
 		{
 			Label: "[::r]F1:[::-] Edit",
 			Keys:  []string{"F1"},
 			Action: func() {
 				c.ctl.EditStart()
-				c.EditControls()
+				c.ShowEditControls()
 			},
 		},
 	}
 	c.update()
 }
 
+// update updates the control panel view with the current controls
 func (c *controlPanel) update() {
 	c.textView.Clear()
 	var frags []string
@@ -96,6 +97,7 @@ func (c *controlPanel) inputCapture(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.Flex, ctl controller.Controller) view.ControlPanel {
+	// notest (too hard to mock)
 	textView := tview.NewTextView()
 	textView.SetDynamicColors(true)
 	layout.AddItem(textView, 0, 1, false)
@@ -106,7 +108,7 @@ func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.F
 		textView: textView,
 		ctl:      ctl,
 	}
-	cp.MainControls()
+	cp.ShowMainControls()
 	app.SetInputCapture(cp.inputCapture)
 	return &cp
 }

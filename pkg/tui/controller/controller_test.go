@@ -39,6 +39,7 @@ func TestNew(t *testing.T) {
 	infoView := mockview.NewMockInfoView(ctl)
 	logView := mockview.NewMockLogView(ctl)
 
+	nodeView.EXPECT().Focus()
 	c := New(ac, ds, errorHandler, nodeView, infoView, logView)
 	assert.NotNil(t, c)
 }

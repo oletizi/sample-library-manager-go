@@ -58,8 +58,8 @@ type LogView interface {
 }
 
 type ControlPanel interface {
-	MainControls()
-	EditControls()
+	ShowMainControls()
+	ShowEditControls()
 }
 
 type Control struct {

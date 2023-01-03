@@ -53,6 +53,7 @@ func newTNodeView(
 	}
 }
 func (t *tNodeView) Focus() {
+	// notest (too hard to mock... and, seriously, it's just a proxy method)
 	t.app.SetFocus(t.list)
 }
 

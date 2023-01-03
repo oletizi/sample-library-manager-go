@@ -34,6 +34,7 @@ type tInfoView struct {
 }
 
 func (t *tInfoView) Focus() {
+	// notest (too hard to mock)
 	t.app.SetFocus(t.textView)
 }
 
@@ -52,6 +53,7 @@ func (t *tInfoView) UpdateSample(ds samplelib.DataSource, sample samplelib.Sampl
 }
 
 func newTInfoView(
+	// notest
 	app *tview.Application,
 	textView *tview.TextView,
 	display view.Display,
