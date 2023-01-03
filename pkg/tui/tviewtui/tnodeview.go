@@ -26,6 +26,7 @@ import (
 )
 
 type tNodeView struct {
+	app     *tview.Application
 	list    *tview.List
 	display view.Display
 	eh      tui.ErrorHandler
@@ -35,6 +36,7 @@ type tNodeView struct {
 // newTNodeView Constructor for tNodeView. Discourages forgetting to set properties. Wires up listeners.
 // Also sets some display defaults
 func newTNodeView(
+	app *tview.Application,
 	list *tview.List,
 	display view.Display,
 	logger util.Logger,
@@ -43,11 +45,16 @@ func newTNodeView(
 	list.ShowSecondaryText(false)
 	list.SetBorder(true)
 	return &tNodeView{
+		app:     app,
 		list:    list,
 		display: display,
 		logger:  logger,
 		eh:      handler,
 	}
+}
+func (t *tNodeView) Focus() {
+	// notest (too hard to mock... and, seriously, it's just a proxy method)
+	t.app.SetFocus(t.list)
 }
 
 func (t *tNodeView) UpdateNode(

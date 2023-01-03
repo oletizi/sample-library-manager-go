@@ -20,12 +20,34 @@ package tviewtui
 import (
 	"github.com/golang/mock/gomock"
 	mock_samplelib "github.com/oletizi/samplemgr/mocks/samplelib"
+	mock_tui "github.com/oletizi/samplemgr/mocks/tui"
 	mock_view "github.com/oletizi/samplemgr/mocks/tui/view"
 	"github.com/oletizi/samplemgr/pkg/tui"
 	"github.com/rivo/tview"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 )
+
+func TestTInfoView_constructor(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	app := tview.NewApplication()
+	textView := tview.NewTextView()
+	display := mock_view.NewMockDisplay(ctl)
+	logger := log.Default()
+	errorHandler := mock_tui.NewMockErrorHandler(ctl)
+
+	iv := newTInfoView(app, textView, display, logger, errorHandler)
+
+	assert.NotNil(t, iv)
+	assert.Equal(t, app, iv.app)
+	assert.Equal(t, textView, iv.textView)
+	assert.Equal(t, display, iv.display)
+	assert.Equal(t, logger, iv.logger)
+	assert.Equal(t, errorHandler, iv.eh)
+}
 
 func TestTInfoView_UpdateMethods(t *testing.T) {
 	ctl := gomock.NewController(t)

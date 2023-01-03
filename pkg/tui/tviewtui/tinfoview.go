@@ -26,10 +26,16 @@ import (
 )
 
 type tInfoView struct {
+	app      *tview.Application
 	textView *tview.TextView
 	logger   util.Logger
 	eh       tui.ErrorHandler
 	display  view.Display
+}
+
+func (t *tInfoView) Focus() {
+	// notest (too hard to mock)
+	t.app.SetFocus(t.textView)
 }
 
 func (t *tInfoView) Update(v string) {
@@ -44,4 +50,23 @@ func (t *tInfoView) UpdateNode(ds samplelib.DataSource, node samplelib.Node) {
 
 func (t *tInfoView) UpdateSample(ds samplelib.DataSource, sample samplelib.Sample) {
 	t.Update(t.display.DisplaySampleAsText(ds, sample))
+}
+
+func newTInfoView(
+	// notest
+	app *tview.Application,
+	textView *tview.TextView,
+	display view.Display,
+	logger util.Logger,
+	handler tui.ErrorHandler,
+) *tInfoView {
+	textView.SetBorder(true)
+	textView.SetTitle(" Info ")
+	return &tInfoView{
+		app:      app,
+		textView: textView,
+		display:  display,
+		logger:   logger,
+		eh:       handler,
+	}
 }

@@ -38,10 +38,11 @@ func (t *tApp) Run() error {
 	return t.app.Run()
 }
 
+// New creates a new instance of the tview-based TUI implementation
 func New(ds samplelib.DataSource) (tui.Application, error) {
 
 	app := tview.NewApplication()
-	logView := &tLogView{textView: tview.NewTextView()}
+	logView := &tLogView{textView: tview.NewTextView().SetScrollable(false)}
 	logView.textView.SetBorder(true)
 
 	l := log.New(logView, "", 0)
@@ -53,17 +54,27 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 		return nil, err
 	}
 
-	nodeView := newTNodeView(tview.NewList(), display, logger, errorHandler)
-	infoView := newTInfoView(tview.NewTextView(), display, logger, errorHandler)
+	nodeView := newTNodeView(app, tview.NewList(), display, logger, errorHandler)
+	infoView := newTInfoView(app, tview.NewTextView(), display, logger, errorHandler)
 
-	flex := tview.NewFlex().
+	// Set up the display interface
+	horizontalLayout := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(nodeView.list, 0, 1, true).
 		AddItem(infoView.textView, 0, 1, false).
 		AddItem(logView.textView, 0, 1, false)
 
-	app.SetRoot(flex, true)
+	// Set up the control panel view
+	controlPanelLayout := tview.NewFlex().SetDirection(tview.FlexColumn)
+	controlPanelLayout.SetBorder(true)
 
+	// The vertical layout holds everything
+	verticalLayout := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(horizontalLayout, 0, 1, false).
+		AddItem(controlPanelLayout, 3, 0, false)
+
+	app.SetRoot(verticalLayout, true)
 	rootNode, err := ds.RootNode()
 	errorHandler.Handle(err)
 
@@ -71,7 +82,15 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView)
+
+	// XXX: Not sure that it's worth the isolation of a constructor when there's this mutual dependency
+	// At least the mess is contained in a single function.
+	//controlPanel := newControlPanel(logger, app, controlPanelLayout)
+	controlPanelConstructor := func(ctl controller.Controller) view.ControlPanel {
+		controlPanel := newControlPanel(logger, app, controlPanelLayout, ctl)
+		return &controlPanel
+	}
+	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView, controlPanelConstructor)
 	ctl.UpdateNode(rootNode)
 	ctl.StartPlayLoop()
 
@@ -79,20 +98,4 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 		app:    app,
 		logger: log.New(logView, "", 0),
 	}, nil
-}
-
-func newTInfoView(
-	textView *tview.TextView,
-	display view.Display,
-	logger util.Logger,
-	handler tui.ErrorHandler,
-) *tInfoView {
-	textView.SetBorder(true)
-	textView.SetTitle(" Info ")
-	return &tInfoView{
-		textView: textView,
-		display:  display,
-		logger:   logger,
-		eh:       handler,
-	}
 }

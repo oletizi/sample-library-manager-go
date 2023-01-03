@@ -22,14 +22,18 @@ import (
 	"io"
 )
 
-type View interface{}
+type View interface {
+	Focus()
+}
 
 type TextView interface {
+	View
 	Update(v string)
 }
 
 //go:generate mockgen -destination=../../../mocks/tui/view/nodview.go . NodeView
 type NodeView interface {
+	View
 	UpdateNode(
 		ds samplelib.DataSource,
 		node samplelib.Node,
@@ -42,6 +46,7 @@ type NodeView interface {
 
 //go:generate mockgen -destination=../../../mocks/tui/view/infoview.go . InfoView
 type InfoView interface {
+	View
 	TextView
 	UpdateNode(ds samplelib.DataSource, node samplelib.Node)
 	UpdateSample(ds samplelib.DataSource, sample samplelib.Sample)
@@ -50,4 +55,16 @@ type InfoView interface {
 //go:generate mockgen -destination=../../../mocks/tui/view/logview.go . LogView
 type LogView interface {
 	io.Writer
+}
+
+//go:generate mockgen -destination=../../../mocks/tui/view/controlpanel.go . ControlPanel
+type ControlPanel interface {
+	ShowMainControls()
+	ShowEditControls()
+}
+
+type Control struct {
+	Label  string
+	Keys   []string
+	Action func()
 }

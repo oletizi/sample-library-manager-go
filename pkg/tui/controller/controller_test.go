@@ -24,6 +24,7 @@ import (
 	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	mockview "github.com/oletizi/samplemgr/mocks/tui/view"
 	mock_util "github.com/oletizi/samplemgr/mocks/util"
+	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -38,9 +39,19 @@ func TestNew(t *testing.T) {
 	nodeView := mockview.NewMockNodeView(ctl)
 	infoView := mockview.NewMockInfoView(ctl)
 	logView := mockview.NewMockLogView(ctl)
+	logView.EXPECT().Write(gomock.Any()).AnyTimes()
+	controlPanel := mockview.NewMockControlPanel(ctl)
 
-	c := New(ac, ds, errorHandler, nodeView, infoView, logView)
+	nodeView.EXPECT().Focus()
+	c := New(ac, ds, errorHandler, nodeView, infoView, logView, func(ctl Controller) view.ControlPanel { return controlPanel })
 	assert.NotNil(t, c)
+
+	// test the edit context functions
+	c.EditStart()
+
+	errorHandler.EXPECT().Handle(nil)
+	c.EditCommit()
+	c.EditCancel()
 }
 
 func TestController_UpdateNode(t *testing.T) {
@@ -55,12 +66,12 @@ func TestController_UpdateNode(t *testing.T) {
 
 	// make a new controller
 	c := &controller{
-		ds:     ds,
-		nv:     nodeView,
-		iv:     infoView,
-		lv:     logView,
-		eh:     eh,
-		logger: log.Default(),
+		dataSource:   ds,
+		nodeView:     nodeView,
+		infoView:     infoView,
+		logView:      logView,
+		errorHandler: eh,
+		logger:       log.Default(),
 	}
 	// XXX: can't figure out how to get function arguments to match
 	nodeView.EXPECT().UpdateNode(ds, node, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
@@ -79,15 +90,32 @@ func TestController_selectNodeAndSample(t *testing.T) {
 	sample := mocksamplelib.NewMockSample(ctl)
 
 	c := &controller{
-		ds: ds,
-		iv: infoView,
+		dataSource: ds,
+		infoView:   infoView,
+		logger:     log.Default(),
 	}
 
+	// test nodeSelected(node)
 	infoView.EXPECT().UpdateNode(ds, node)
 	c.nodeSelected(node)
 
+	// test the node edit context functions
+	node.EXPECT().Name().AnyTimes().Return("The node name")
+	c.editContext.start()
+	err := c.editContext.commit()
+	assert.Nil(t, err)
+	c.editContext.cancel()
+
+	// test sampleSelected(sample)
 	infoView.EXPECT().UpdateSample(ds, sample)
 	c.sampleSelected(sample)
+
+	// test the sample edit context functions
+	sample.EXPECT().Name().AnyTimes().Return("The sample name")
+	c.editContext.start()
+	err = c.editContext.commit()
+	assert.Nil(t, err)
+	c.editContext.cancel()
 }
 
 func TestChooseSameSample(t *testing.T) {
@@ -102,9 +130,9 @@ func TestChooseSameSample(t *testing.T) {
 	c := &controller{
 		playQueue:     playQueue,
 		logger:        log.Default(),
-		ac:            audioContext,
+		audioContext:  audioContext,
 		currentPlayer: audioPlayer,
-		eh:            errorHandler,
+		errorHandler:  errorHandler,
 	}
 
 	playQueue.EXPECT().Add(sample)
@@ -137,13 +165,13 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	playQueue := mock_util.NewMockQueue(ctl)
 
 	c := &controller{
-		playQueue: playQueue,
-		eh:        errorHandler,
-		ac:        audioContext,
-		ds:        ds,
-		nv:        nodeView,
-		iv:        infoView,
-		logger:    util.NewLogger(log.Default()),
+		playQueue:    playQueue,
+		errorHandler: errorHandler,
+		audioContext: audioContext,
+		dataSource:   ds,
+		nodeView:     nodeView,
+		infoView:     infoView,
+		logger:       util.NewLogger(log.Default()),
 	}
 
 	errorHandler.EXPECT().Handle(gomock.Any()).AnyTimes()
@@ -171,4 +199,52 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	audioPlayer.EXPECT().Play(gomock.Any())
 	log.Println("About to call playLoop...")
 	c.playLoop()
+}
+
+func TestController_EditStart(t *testing.T) {
+	startCalled := false
+	c := controller{
+		editContext: editContext{
+			start: func() {
+				startCalled = true
+			},
+		},
+	}
+	c.EditStart()
+	assert.True(t, startCalled)
+}
+
+func TestController_EditCommit(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
+
+	commitCalled := false
+	c := controller{
+		errorHandler: errorHandler,
+		editContext: editContext{
+			commit: func() error {
+				commitCalled = true
+				return nil
+			},
+		},
+	}
+	errorHandler.EXPECT().Handle(nil)
+	c.EditCommit()
+	assert.True(t, commitCalled)
+}
+
+func TestController_EditCancel(t *testing.T) {
+	cancelCalled := false
+	c := controller{
+		editContext: editContext{
+			cancel: func() {
+				cancelCalled = true
+			},
+		},
+	}
+
+	c.EditCancel()
+	assert.True(t, cancelCalled)
 }
