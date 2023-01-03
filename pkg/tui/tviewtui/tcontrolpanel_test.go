@@ -18,13 +18,51 @@
 package tviewtui
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	mock_controller "github.com/oletizi/samplemgr/mocks/tui/controller"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
+	"log"
 	"strings"
 	"testing"
 )
+
+func TestControlPanel_constructorAndInputCapture(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	logger := log.Default()
+	app := tview.NewApplication()
+	layout := tview.NewFlex()
+	controller := mock_controller.NewMockController(ctl)
+	c := newControlPanel(logger, app, layout, controller)
+	c.ctl = controller
+
+	assert.NotNil(t, c)
+	assert.NotNil(t, c.controls)
+	assert.NotNil(t, c.logger)
+	assert.NotNil(t, c.textView)
+	assert.Equal(t, app, c.app)
+
+	assert.Equal(t, 1, layout.GetItemCount())
+
+	// test F1 key event, "edit" in the main control context
+	controller.EXPECT().EditStart()
+	event := tcell.NewEventKey(tcell.KeyF1, ' ', tcell.ModNone)
+	c.inputCapture(event)
+
+	// test F1 key event, "save" in the edit control context
+	c.ShowEditControls()
+	controller.EXPECT().EditCommit()
+	c.inputCapture(event)
+
+	// test F2 key event, "cancel" in the edit control context
+	event = tcell.NewEventKey(tcell.KeyF2, ' ', tcell.ModNone)
+	c.ShowEditControls()
+	controller.EXPECT().EditCancel()
+	c.inputCapture(event)
+}
 
 func TestControlPanel_ShowEditControls(t *testing.T) {
 	ctl := gomock.NewController(t)

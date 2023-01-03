@@ -24,6 +24,7 @@ import (
 	mocktui "github.com/oletizi/samplemgr/mocks/tui"
 	mockview "github.com/oletizi/samplemgr/mocks/tui/view"
 	mock_util "github.com/oletizi/samplemgr/mocks/util"
+	"github.com/oletizi/samplemgr/pkg/tui/view"
 	"github.com/oletizi/samplemgr/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -42,7 +43,7 @@ func TestNew(t *testing.T) {
 	controlPanel := mockview.NewMockControlPanel(ctl)
 
 	nodeView.EXPECT().Focus()
-	c := New(ac, ds, errorHandler, nodeView, infoView, logView, controlPanel)
+	c := New(ac, ds, errorHandler, nodeView, infoView, logView, func(ctl Controller) view.ControlPanel { return controlPanel })
 	assert.NotNil(t, c)
 
 	// test the edit context functions

@@ -85,9 +85,12 @@ func New(ds samplelib.DataSource) (tui.Application, error) {
 
 	// XXX: Not sure that it's worth the isolation of a constructor when there's this mutual dependency
 	// At least the mess is contained in a single function.
-	controlPanel := newControlPanel(logger, app, controlPanelLayout)
-	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView, &controlPanel)
-	controlPanel.ctl = ctl
+	//controlPanel := newControlPanel(logger, app, controlPanelLayout)
+	controlPanelConstructor := func(ctl controller.Controller) view.ControlPanel {
+		controlPanel := newControlPanel(logger, app, controlPanelLayout, ctl)
+		return &controlPanel
+	}
+	ctl := controller.New(audioContext, ds, errorHandler, nodeView, infoView, logView, controlPanelConstructor)
 	ctl.UpdateNode(rootNode)
 	ctl.StartPlayLoop()
 

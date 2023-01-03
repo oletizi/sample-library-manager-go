@@ -194,7 +194,7 @@ func New(
 	nodeView view.NodeView,
 	infoView view.InfoView,
 	logView view.LogView,
-	controlPanel view.ControlPanel,
+	controlPanelConstructor func(ctl Controller) view.ControlPanel,
 ) Controller {
 	logger := log.New(logView, "", 0)
 	var logger2 util.Logger = logger
@@ -219,8 +219,8 @@ func New(
 				logger2.Println("Null cancel edit.")
 			},
 		},
-		controlPanel: controlPanel,
 	}
+	rv.controlPanel = controlPanelConstructor(rv)
 	nodeView.Focus()
 	return rv
 }
