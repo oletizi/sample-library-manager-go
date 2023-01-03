@@ -96,7 +96,7 @@ func (c *controlPanel) inputCapture(event *tcell.EventKey) *tcell.EventKey {
 	return event
 }
 
-func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.Flex, ctl controller.Controller) view.ControlPanel {
+func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.Flex) controlPanel {
 	// notest (too hard to mock)
 	textView := tview.NewTextView()
 	textView.SetDynamicColors(true)
@@ -106,9 +106,8 @@ func newControlPanel(logger util.Logger, app *tview.Application, layout *tview.F
 		app:      app,
 		layout:   layout,
 		textView: textView,
-		ctl:      ctl,
 	}
 	cp.ShowMainControls()
 	app.SetInputCapture(cp.inputCapture)
-	return &cp
+	return cp
 }

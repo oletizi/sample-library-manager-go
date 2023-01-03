@@ -57,6 +57,7 @@ type LogView interface {
 	io.Writer
 }
 
+//go:generate mockgen -destination=../../../mocks/tui/view/controlpanel.go . ControlPanel
 type ControlPanel interface {
 	ShowMainControls()
 	ShowEditControls()

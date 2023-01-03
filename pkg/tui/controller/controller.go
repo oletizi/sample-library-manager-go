@@ -30,7 +30,6 @@ import (
 //go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
 type Controller interface {
 	UpdateNode(node samplelib.Node)
-	SetControlPanel(cp view.ControlPanel)
 	StartPlayLoop()
 	EditStart()
 	EditCommit()
@@ -45,12 +44,12 @@ type editContext struct {
 
 type controller struct {
 	playQueue     workqueue.Interface
-	ac            audio.Context
-	ds            samplelib.DataSource
-	eh            tui.ErrorHandler
-	nv            view.NodeView
-	iv            view.InfoView
-	lv            view.LogView
+	audioContext  audio.Context
+	dataSource    samplelib.DataSource
+	errorHandler  tui.ErrorHandler
+	nodeView      view.NodeView
+	infoView      view.InfoView
+	logView       view.LogView
 	logger        util.Logger
 	controlPanel  view.ControlPanel
 	currentPlayer audio.Player
@@ -60,12 +59,8 @@ type controller struct {
 
 // UpdateNode tells the controller to update the UI for a new node
 func (c *controller) UpdateNode(node samplelib.Node) {
-	c.nv.UpdateNode(c.ds, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
-	c.iv.UpdateNode(c.ds, node)
-}
-
-func (c *controller) SetControlPanel(controlPanel view.ControlPanel) {
-	c.controlPanel = controlPanel
+	c.nodeView.UpdateNode(c.dataSource, node, c.nodeSelected, c.sampleSelected, c.nodeChosen, c.sampleChosen)
+	c.infoView.UpdateNode(c.dataSource, node)
 }
 
 func (c *controller) StartPlayLoop() {
@@ -78,7 +73,7 @@ func (c *controller) EditStart() {
 }
 
 func (c *controller) EditCommit() {
-	c.eh.Handle(c.editContext.commit())
+	c.errorHandler.Handle(c.editContext.commit())
 }
 
 func (c *controller) EditCancel() {
@@ -104,7 +99,7 @@ func (c *controller) playLoop() {
 			c.logger.Println("Current player is playing, stopping!")
 			c.currentPlayer.Stop()
 			c.logger.Println("Current player stopped.")
-			c.eh.Handle(err)
+			c.errorHandler.Handle(err)
 			// If the current sample is the same as the newSample, don't play the sample again.
 			// This is the play/pause toggle condition.
 			if newSample.Equal(c.currentSample) {
@@ -116,10 +111,10 @@ func (c *controller) playLoop() {
 		// if the chosen newSample is different than the current newSample, create a new newPlayer
 		// and start playback
 		c.logger.Printf("Creating a new player for %s", newSample.Path())
-		newPlayer, err := c.ac.PlayerFor(newSample.Path())
+		newPlayer, err := c.audioContext.PlayerFor(newSample.Path())
 		if err != nil {
 			// notest
-			c.eh.Handle(err)
+			c.errorHandler.Handle(err)
 			continue
 		}
 		// Play the chosen newSample
@@ -128,13 +123,13 @@ func (c *controller) playLoop() {
 			// notest
 			c.logger.Println("Done playing newSample! Closing the newPlayer...")
 			newPlayer.Close()
-			c.eh.Handle(err)
+			c.errorHandler.Handle(err)
 		}
 		newPlayer.Play(&callback)
 		c.logger.Println("Done calling play.")
 		if err != nil {
 			// notest
-			c.eh.Handle(err)
+			c.errorHandler.Handle(err)
 			continue
 		}
 		c.logger.Println("Setting current sample and player")
@@ -160,7 +155,7 @@ func (c *controller) nodeSelected(node samplelib.Node) {
 		},
 	}
 	// update the info view
-	c.iv.UpdateNode(c.ds, node)
+	c.infoView.UpdateNode(c.dataSource, node)
 }
 
 // sampleSelected callback function for when a sample is selected in the node view
@@ -179,7 +174,7 @@ func (c *controller) sampleSelected(sample samplelib.Sample) {
 		},
 	}
 	// update the info view
-	c.iv.UpdateSample(c.ds, sample)
+	c.infoView.UpdateSample(c.dataSource, sample)
 }
 
 // nodeChosen callback function for when a node is chosen in the node view
@@ -193,24 +188,25 @@ func (c *controller) sampleChosen(newSample samplelib.Sample) {
 }
 
 func New(
-	ac audio.Context,
-	ds samplelib.DataSource,
-	eh tui.ErrorHandler,
+	audioContext audio.Context,
+	dataSource samplelib.DataSource,
+	errorHandler tui.ErrorHandler,
 	nodeView view.NodeView,
 	infoView view.InfoView,
 	logView view.LogView,
+	controlPanel view.ControlPanel,
 ) Controller {
 	logger := log.New(logView, "", 0)
 	var logger2 util.Logger = logger
 	rv := &controller{
-		playQueue: workqueue.New(),
-		ac:        ac,
-		ds:        ds,
-		eh:        eh,
-		nv:        nodeView,
-		iv:        infoView,
-		lv:        logView,
-		logger:    logger,
+		playQueue:    workqueue.New(),
+		audioContext: audioContext,
+		dataSource:   dataSource,
+		errorHandler: errorHandler,
+		nodeView:     nodeView,
+		infoView:     infoView,
+		logView:      logView,
+		logger:       logger,
 		editContext: editContext{
 			func() {
 				logger2.Println("Null start edit.")
@@ -223,6 +219,7 @@ func New(
 				logger2.Println("Null cancel edit.")
 			},
 		},
+		controlPanel: controlPanel,
 	}
 	nodeView.Focus()
 	return rv
