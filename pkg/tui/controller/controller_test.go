@@ -38,10 +38,18 @@ func TestNew(t *testing.T) {
 	nodeView := mockview.NewMockNodeView(ctl)
 	infoView := mockview.NewMockInfoView(ctl)
 	logView := mockview.NewMockLogView(ctl)
+	logView.EXPECT().Write(gomock.Any()).AnyTimes()
 
 	nodeView.EXPECT().Focus()
 	c := New(ac, ds, errorHandler, nodeView, infoView, logView)
 	assert.NotNil(t, c)
+
+	// test the edit context functions
+	c.EditStart()
+
+	errorHandler.EXPECT().Handle(nil)
+	c.EditCommit()
+	c.EditCancel()
 }
 
 func TestController_UpdateNode(t *testing.T) {
