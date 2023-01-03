@@ -27,27 +27,6 @@ import (
 	"log"
 )
 
-type editContext struct {
-	start  func()
-	commit func() error
-	cancel func()
-}
-
-func newNullEditContext(logger util.Logger) editContext {
-	return editContext{
-		func() {
-			logger.Println("Null start edit.")
-		},
-		func() error {
-			logger.Println("Null commit edit.")
-			return nil
-		},
-		func() {
-			logger.Println("Null cancel edit.")
-		},
-	}
-}
-
 //go:generate mockgen -destination=../../../mocks/tui/controller/controller.go . Controller
 type Controller interface {
 	UpdateNode(node samplelib.Node)
@@ -56,6 +35,12 @@ type Controller interface {
 	EditStart()
 	EditCommit()
 	EditCancel()
+}
+
+type editContext struct {
+	start  func()
+	commit func() error
+	cancel func()
 }
 
 type controller struct {
@@ -216,16 +201,28 @@ func New(
 	logView view.LogView,
 ) Controller {
 	logger := log.New(logView, "", 0)
+	var logger2 util.Logger = logger
 	rv := &controller{
-		playQueue:   workqueue.New(),
-		ac:          ac,
-		ds:          ds,
-		eh:          eh,
-		nv:          nodeView,
-		iv:          infoView,
-		lv:          logView,
-		logger:      logger,
-		editContext: newNullEditContext(logger),
+		playQueue: workqueue.New(),
+		ac:        ac,
+		ds:        ds,
+		eh:        eh,
+		nv:        nodeView,
+		iv:        infoView,
+		lv:        logView,
+		logger:    logger,
+		editContext: editContext{
+			func() {
+				logger2.Println("Null start edit.")
+			},
+			func() error {
+				logger2.Println("Null commit edit.")
+				return nil
+			},
+			func() {
+				logger2.Println("Null cancel edit.")
+			},
+		},
 	}
 	nodeView.Focus()
 	return rv

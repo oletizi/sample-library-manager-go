@@ -173,3 +173,51 @@ func TestController_chooseNodeAndSample(t *testing.T) {
 	log.Println("About to call playLoop...")
 	c.playLoop()
 }
+
+func TestController_EditStart(t *testing.T) {
+	startCalled := false
+	c := controller{
+		editContext: editContext{
+			start: func() {
+				startCalled = true
+			},
+		},
+	}
+	c.EditStart()
+	assert.True(t, startCalled)
+}
+
+func TestController_EditCommit(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	errorHandler := mocktui.NewMockErrorHandler(ctl)
+
+	commitCalled := false
+	c := controller{
+		eh: errorHandler,
+		editContext: editContext{
+			commit: func() error {
+				commitCalled = true
+				return nil
+			},
+		},
+	}
+	errorHandler.EXPECT().Handle(nil)
+	c.EditCommit()
+	assert.True(t, commitCalled)
+}
+
+func TestController_EditCancel(t *testing.T) {
+	cancelCalled := false
+	c := controller{
+		editContext: editContext{
+			cancel: func() {
+				cancelCalled = true
+			},
+		},
+	}
+
+	c.EditCancel()
+	assert.True(t, cancelCalled)
+}
